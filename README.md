@@ -53,7 +53,8 @@ options:
 
 ## Supports
 
-Windows 8 and up
+Windows 8 and up (x64).
+Technically could support Linux/MacOS but binaries will only be compiled for Windows for now. 
 
 ## Requirements
 

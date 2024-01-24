@@ -27,7 +27,7 @@ def build_app():
     pyinstaller_folder.mkdir(exist_ok=True)
 
     # Define paths before changing directory
-    img_gen = project_root / "image_generator.py"
+    img_gen = project_root / "frame_forge.py"
     icon_path = project_root / "images" / "icon.ico"
     additional_hooks_path = Path(Path.cwd() / "hooks")
 
@@ -54,7 +54,7 @@ def build_app():
             "--add-data",
             f"{vapoursynth_64_portable};.",
             "--name",
-            "Image-Generator",
+            "FrameForge",
             str(img_gen),
             f"--additional-hooks-dir={str(additional_hooks_path)}",
         ]
@@ -62,7 +62,7 @@ def build_app():
 
     # Ensure the output of the .exe
     success = "Did not complete successfully"
-    exe_path = project_root / pyinstaller_folder / "dist" / "Image-Generator.exe"
+    exe_path = project_root / pyinstaller_folder / "dist" / "FrameForge.exe"
     if exe_path.is_file() and str(build_job.returncode) == "0":
         success = f"\nSuccess!\nPath to exe: {str(exe_path)}"
 

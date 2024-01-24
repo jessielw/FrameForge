@@ -1,12 +1,12 @@
 from pathlib import Path
 from argparse import ArgumentParser
-from image_generator import GenerateImages
-from image_generator.exceptions import ImageGeneratorError
-from image_generator.utils import exit_application
+from frame_forge import GenerateImages
+from frame_forge.exceptions import FrameForgeError
+from frame_forge.utils import exit_application
 
 
-program_name = "Comparison Image Generator"
-__version__ = "1.1.0"
+program_name = "FrameForge"
+__version__ = "1.0.0"
 
 
 if __name__ == "__main__":
@@ -106,5 +106,5 @@ if __name__ == "__main__":
         img_gen = img_generator.process_images()
         if img_gen:
             exit_application(f"Output: {img_gen}", 0)
-    except ImageGeneratorError as error:
+    except FrameForgeError as error:
         exit_application(error, 1)

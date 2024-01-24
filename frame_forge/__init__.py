@@ -6,8 +6,8 @@ from numpy import linspace
 from unidecode import unidecode
 import awsmfunc
 import vapoursynth as vs
-from image_generator.exceptions import ImageGeneratorError
-from image_generator.utils import get_working_dir, hex_to_bgr
+from frame_forge.exceptions import FrameForgeError
+from frame_forge.utils import get_working_dir, hex_to_bgr
 
 
 class GenerateImages:
@@ -362,7 +362,7 @@ class GenerateImages:
                     frame += 1
                 b_frames[i] = frame
         except ValueError:
-            raise ImageGeneratorError(
+            raise FrameForgeError(
                 "Error! Your encode file is likely an incomplete or corrupted encode"
             )
 
@@ -579,7 +579,7 @@ class GenerateImages:
     def load_plugins(self):
         plugin_path = get_working_dir() / "img_plugins"
         if not plugin_path.is_dir() and not plugin_path.exists():
-            raise ImageGeneratorError("Can not detect plugin directory")
+            raise FrameForgeError("Can not detect plugin directory")
         else:
             for plugin in plugin_path.glob("*.dll"):
                 self.core.std.LoadPlugin(Path(plugin).resolve())

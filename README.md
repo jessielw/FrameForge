@@ -60,3 +60,42 @@ Technically could support Linux/MacOS but binaries will only be compiled for Win
 
 You will need lsmash, ffms2, libfpng, libimwri, and SubText vapoursynth plugins.
 Place all of these in a folder 'img_plugins' beside the script/executable.
+
+## Example Usage
+
+```
+FrameForge.exe --source "path/Ant-Man.2015.mkv" --encode "path/Ant-Man.2015.Encoded.mkv" --sub-size 12 --indexer lsmash --top-crop 22 --bottom-crop 22 --subtitle-color #00FF00
+
+Indexing source
+...
+Source index completed
+
+Indexing encode
+...
+Encode index completed
+
+Checking if encode has been de-interlaced
+No de-interlacing detected
+
+Generating 20 'B' frames for comparison images
+Finished generating 20 'B' frames
+
+Creating folders for images
+Folder creation completed
+
+Generating screenshots, please wait
+Writing file: 01a_source__%d.png, frame: 25270
+Writing file: 02a_source__%d.png, frame: 30590
+...
+
+Generating a few sync frames
+Writing file: 01b_encode__%d.png, frame: 35910
+Writing file: 02b_encode__%d.png, frame: 25270
+...
+
+Screen generation completed
+Output: path/Ant-Man.2015_images/
+```
+
+[![04a_source__41230.png](https://thumbs2.imgbox.com/8d/47/X3l54wjy_t.png)](https://imgbox.com/X3l54wjy)
+[![04b_encode__41230.png](https://thumbs2.imgbox.com/07/65/WvJ55AZp_t.png)](https://imgbox.com/WvJ55AZp)

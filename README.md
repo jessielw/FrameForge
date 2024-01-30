@@ -54,12 +54,12 @@ options:
 ## Supports
 
 Windows 8 and up (x64).
-Technically could support Linux/MacOS but binaries will only be compiled for Windows for now. 
+Technically could support Linux/MacOS but binaries will only be compiled for Windows for now.
 
 ## Requirements
 
-You will need lsmash, ffms2, libfpng, libimwri, and SubText vapoursynth plugins.
-Place all of these in a folder 'img_plugins' beside the script/executable.
+You will need lsmash, ffms2, libfpng, libimwri, and SubText vapoursynth plugins. For windows
+I have compiled an executable with the needed runtime libraries.
 
 ## Example Usage
 

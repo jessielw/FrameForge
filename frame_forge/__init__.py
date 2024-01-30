@@ -2,11 +2,13 @@ import re
 import shutil
 from random import choice
 from pathlib import Path
+from typing import Tuple
 from numpy import linspace
 from unidecode import unidecode
 import awsmfunc
 import vapoursynth as vs
 from frame_forge.exceptions import FrameForgeError
+from frame_forge.font_scaler import FontScaler
 from frame_forge.utils import get_working_dir, hex_to_bgr
 
 
@@ -83,6 +85,10 @@ class GenerateImages:
             "1,0,0,0,100,100,0,0,1,1,0,7,5,0,0,1"
         )
 
+        selected_sub_style_ref, selected_sub_style_sync = self.sync_font_scaling(
+            num_source_frames=num_source_frames, scaling_factor=1.35
+        )
+
         self.check_de_interlaced(num_source_frames, num_encode_frames)
 
         b_frames = self.get_b_frames(num_source_frames)
@@ -103,7 +109,8 @@ class GenerateImages:
             vs_encode_info,
             screenshot_comparison_dir,
             screenshot_sync_dir,
-            selected_sub_style,
+            selected_sub_style_ref,
+            selected_sub_style_sync,
         )
 
         return img_job
@@ -115,6 +122,67 @@ class GenerateImages:
             flush=True,
         )
 
+    def sync_font_scaling(
+        self, num_source_frames, scaling_factor: float
+    ) -> Tuple[str, str]:
+        calculate_str_len = max(
+            len("frame: reference"), len(str(f"frame: {num_source_frames}"))
+        )
+        scale_position = FontScaler().get_adjusted_scale(
+            self.sub_size + 2, scaling_factor
+        )
+        calculate_right_subs = int(
+            self.source_node.width
+            - ((calculate_str_len + self.sub_size + 2) * scale_position)
+        )
+        selected_sub_style_ref = (
+            f"Segoe UI,{self.sub_size + 2},&H31FF31&,&H00000000,&H00000000,&H00000000,"
+            f"1,0,0,0,100,100,0,0,1,1,0,7,{calculate_right_subs},0,0,1"
+        )
+        selected_sub_style_sync = (
+            f"Segoe UI,{self.sub_size + 2},&H31FF31&,&H00000000,&H00000000,&H00000000,"
+            f"1,0,0,0,100,100,0,0,1,1,0,7,{calculate_right_subs},0,0,1"
+        )
+        return selected_sub_style_ref, selected_sub_style_sync
+
+    def generate_ref_screens(
+        self, selected_sub_style_ref, frames: list, screenshot_sync_dir
+    ):
+        """Generates reference frames"""
+        for ref_frame in frames:
+            vs_encode_ref_info = self.core.sub.Subtitle(
+                clip=self.encode_node,
+                text=f"Reference\nFrame: {ref_frame}",
+                style=selected_sub_style_ref,
+            )
+            awsmfunc.ScreenGen(
+                vs_encode_ref_info,
+                frame_numbers=[ref_frame],
+                fpng_compression=1,
+                folder=screenshot_sync_dir,
+                suffix="b_encode__%d",
+                callback=self.screen_gen_callback,
+            )
+
+    def generate_sync_screens(
+        self, frame_list, selected_sub_style_sync, screenshot_sync_dir
+    ):
+        """Generates sync frames"""
+        for sync_frame in frame_list:
+            vs_sync_info = self.core.sub.Subtitle(
+                clip=self.source_node,
+                text=f"Sync\nFrame: {sync_frame}",
+                style=selected_sub_style_sync,
+            )
+            awsmfunc.ScreenGen(
+                vs_sync_info,
+                frame_numbers=[sync_frame],
+                fpng_compression=1,
+                folder=Path(screenshot_sync_dir),
+                suffix="a_source__%d",
+                callback=self.screen_gen_callback,
+            )
+
     def generate_screens(
         self,
         b_frames,
@@ -122,8 +190,9 @@ class GenerateImages:
         vs_encode_info,
         screenshot_comparison_dir,
         screenshot_sync_dir,
-        selected_sub_style,
-    ):
+        selected_sub_style_ref,
+        selected_sub_style_sync,
+    ) -> str:
         print("\nGenerating screenshots, please wait", flush=True)
 
         # handle re_sync if needed
@@ -169,60 +238,26 @@ class GenerateImages:
         sync_2 = choice(remove_sync1)
 
         # reference subs
-        vs_source_ref_info = self.core.sub.Subtitle(
-            clip=self.source_node, text="Sync", style=selected_sub_style
-        )
-        vs_encode_ref_info = self.core.sub.Subtitle(
-            clip=self.encode_node, text="Reference", style=selected_sub_style
+        self.generate_ref_screens(
+            selected_sub_style_ref, [sync_1, sync_2], screenshot_sync_dir
         )
 
-        # generate screens for the two reference frames
-        awsmfunc.ScreenGen(
-            vs_encode_ref_info,
-            frame_numbers=[sync_1, sync_2],
-            fpng_compression=1,
-            folder=screenshot_sync_dir,
-            suffix="b_encode__%d",
-            callback=self.screen_gen_callback,
+        # sync subs 1
+        sync_subs_1 = [sync_1 + i for i in range(-5, 6)]
+
+        self.generate_sync_screens(
+            sync_subs_1,
+            selected_sub_style_sync,
+            Path(Path(screenshot_sync_dir) / "sync1"),
         )
 
-        # generate 10 source frames around those reference frames
-        awsmfunc.ScreenGen(
-            vs_source_ref_info,
-            frame_numbers=[
-                sync_1 - 4,
-                sync_1 - 3,
-                sync_1 - 2,
-                sync_1 - 1,
-                sync_1,
-                sync_1 + 1,
-                sync_1 + 2,
-                sync_1 + 3,
-                sync_1 + 4,
-            ],
-            fpng_compression=1,
-            folder=Path(Path(screenshot_sync_dir) / "sync1"),
-            suffix="a_source__%d",
-            callback=self.screen_gen_callback,
-        )
+        # sync subs 2
+        sync_subs_2 = [sync_2 + i for i in range(-5, 6)]
 
-        awsmfunc.ScreenGen(
-            vs_source_ref_info,
-            frame_numbers=[
-                sync_2 - 4,
-                sync_2 - 3,
-                sync_2 - 2,
-                sync_2 - 1,
-                sync_2,
-                sync_2 + 1,
-                sync_2 + 2,
-                sync_2 + 3,
-                sync_2 + 4,
-            ],
-            fpng_compression=1,
-            folder=Path(Path(screenshot_sync_dir) / "sync2"),
-            suffix="a_source__%d",
-            callback=self.screen_gen_callback,
+        self.generate_sync_screens(
+            sync_subs_2,
+            selected_sub_style_sync,
+            Path(Path(screenshot_sync_dir) / "sync2"),
         )
 
         print("Screen generation completed", flush=True)

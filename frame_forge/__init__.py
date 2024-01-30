@@ -128,19 +128,20 @@ class GenerateImages:
         calculate_str_len = max(
             len("frame: reference"), len(str(f"frame: {num_source_frames}"))
         )
+        sync_size_offset = 5
         scale_position = FontScaler().get_adjusted_scale(
-            self.sub_size + 2, scaling_factor
+            self.sub_size + sync_size_offset, scaling_factor
         )
         calculate_right_subs = int(
             self.source_node.width
-            - ((calculate_str_len + self.sub_size + 2) * scale_position)
+            - ((calculate_str_len + self.sub_size + sync_size_offset) * scale_position)
         )
         selected_sub_style_ref = (
-            f"Segoe UI,{self.sub_size + 2},&H31FF31&,&H00000000,&H00000000,&H00000000,"
-            f"1,0,0,0,100,100,0,0,1,1,0,7,{calculate_right_subs},0,0,1"
+            f"Segoe UI,{self.sub_size + sync_size_offset},&H31FF31&,&H00000000,&H00000000,&H00000000,"
+            f"1,0,0,0,100,100,0,0,1,1,0,7,5,0,0,1"
         )
         selected_sub_style_sync = (
-            f"Segoe UI,{self.sub_size + 2},&H31FF31&,&H00000000,&H00000000,&H00000000,"
+            f"Segoe UI,{self.sub_size + sync_size_offset},&H31FF31&,&H00000000,&H00000000,&H00000000,"
             f"1,0,0,0,100,100,0,0,1,1,0,7,{calculate_right_subs},0,0,1"
         )
         return selected_sub_style_ref, selected_sub_style_sync
@@ -232,18 +233,21 @@ class GenerateImages:
         print("\nGenerating a few sync frames", flush=True)
 
         # select two frames randomly from list
-        sync_1 = choice(b_frames)
+        get_sync_1 = choice(b_frames)
         remove_sync1 = b_frames.copy()
-        remove_sync1.remove(sync_1)
-        sync_2 = choice(remove_sync1)
+        remove_sync1.remove(get_sync_1)
+        get_sync_2 = choice(remove_sync1)
+
+        # sync list
+        ref_sync_list = sorted([get_sync_1, get_sync_2])
 
         # reference subs
         self.generate_ref_screens(
-            selected_sub_style_ref, [sync_1, sync_2], screenshot_sync_dir
+            selected_sub_style_ref, ref_sync_list, screenshot_sync_dir
         )
 
         # sync subs 1
-        sync_subs_1 = [sync_1 + i for i in range(-5, 6)]
+        sync_subs_1 = [ref_sync_list[0] + i for i in range(-5, 6)]
 
         self.generate_sync_screens(
             sync_subs_1,
@@ -252,7 +256,7 @@ class GenerateImages:
         )
 
         # sync subs 2
-        sync_subs_2 = [sync_2 + i for i in range(-5, 6)]
+        sync_subs_2 = [ref_sync_list[1] + i for i in range(-5, 6)]
 
         self.generate_sync_screens(
             sync_subs_2,

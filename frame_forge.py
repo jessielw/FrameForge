@@ -6,7 +6,7 @@ from frame_forge.utils import exit_application
 
 
 program_name = "FrameForge"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 
 if __name__ == "__main__":
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         help="Indexer choice",
     )
     parser.add_argument("--index-dir", type=str, help="Path to look/create indexes")
-    parser.add_argument("--sub-size", type=int, help="Size of subtitles")
+    parser.add_argument("--sub-size", type=int, default=20, help="Size of subtitles")
     parser.add_argument("--left-crop", type=int, help="Left crop")
     parser.add_argument("--right-crop", type=int, help="Right crop")
     parser.add_argument("--top-crop", type=int, help="Top crop")

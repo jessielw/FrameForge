@@ -8,7 +8,6 @@ from unidecode import unidecode
 import awsmfunc
 import vapoursynth as vs
 from frame_forge.exceptions import FrameForgeError
-from frame_forge.font_scaler import FontScaler
 from frame_forge.utils import get_working_dir, hex_to_bgr
 
 
@@ -71,9 +70,10 @@ class GenerateImages:
         num_source_frames = len(self.source_node)
         num_encode_frames = len(self.encode_node)
 
-        # Format: Name, Fontname, Font-size, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic,
-        # Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL,
-        # MarginR, MarginV,
+        # ASS subtitle styles
+        # Font Name, Font Size, Primary Color, Secondary Color, Outline Color, Back Color, Bold,
+        # Italic, Underline, Strikeout, Scale X, Scale Y, Spacing, Angle, Border Style, Outline Width,
+        # Shadow Depth, Alignment, Left Margin, Right Margin, Vertical Margin, Encoding
 
         # bgr color
         color = "&H000ac7f5"
@@ -82,11 +82,17 @@ class GenerateImages:
 
         selected_sub_style = (
             f"Segoe UI,{self.sub_size},{color},&H00000000,&H00000000,&H00000000,"
-            "1,0,0,0,100,100,0,0,1,1,0,7,5,0,0,1"
+            "1,0,0,0,100,100,0,0,1,1,0,7,10,10,10,1"
         )
-
-        selected_sub_style_ref, selected_sub_style_sync = self.sync_font_scaling(
-            num_source_frames=num_source_frames, scaling_factor=1.35
+        sync_sub_base = (
+            "Segoe UI,{size},&H31FF31&,&H00000000,&H00000000,&H00000000,"
+            "1,0,0,0,100,100,0,0,1,1,0,{pos},10,10,10,1"
+        )
+        selected_sub_style_ref = sync_sub_base.format(
+            size=str(self.sub_size + 5), pos="7"
+        )
+        selected_sub_style_sync = sync_sub_base.format(
+            size=str(self.sub_size + 5), pos="9"
         )
 
         self.check_de_interlaced(num_source_frames, num_encode_frames)
@@ -121,30 +127,6 @@ class GenerateImages:
             str(sg_call_back).replace("ScreenGen: ", "").replace("\n", "").strip(),
             flush=True,
         )
-
-    def sync_font_scaling(
-        self, num_source_frames, scaling_factor: float
-    ) -> Tuple[str, str]:
-        calculate_str_len = max(
-            len("frame: reference"), len(str(f"frame: {num_source_frames}"))
-        )
-        sync_size_offset = 5
-        scale_position = FontScaler().get_adjusted_scale(
-            self.sub_size + sync_size_offset, scaling_factor
-        )
-        calculate_right_subs = int(
-            self.source_node.width
-            - ((calculate_str_len + self.sub_size + sync_size_offset) * scale_position)
-        )
-        selected_sub_style_ref = (
-            f"Segoe UI,{self.sub_size + sync_size_offset},&H31FF31&,&H00000000,&H00000000,&H00000000,"
-            f"1,0,0,0,100,100,0,0,1,1,0,7,5,0,0,1"
-        )
-        selected_sub_style_sync = (
-            f"Segoe UI,{self.sub_size + sync_size_offset},&H31FF31&,&H00000000,&H00000000,&H00000000,"
-            f"1,0,0,0,100,100,0,0,1,1,0,7,{calculate_right_subs},0,0,1"
-        )
-        return selected_sub_style_ref, selected_sub_style_sync
 
     def generate_ref_screens(
         self, selected_sub_style_ref, frames: list, screenshot_sync_dir

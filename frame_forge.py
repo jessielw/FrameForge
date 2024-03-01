@@ -3,10 +3,11 @@ from argparse import ArgumentParser
 from frame_forge import GenerateImages
 from frame_forge.exceptions import FrameForgeError
 from frame_forge.utils import exit_application
+from frame_forge.cli_utils import frame_list
 
 
 program_name = "FrameForge"
-__version__ = "1.0.3"
+__version__ = "1.1.0"
 
 
 if __name__ == "__main__":
@@ -18,6 +19,12 @@ if __name__ == "__main__":
 
     parser.add_argument("--source", type=str, help="Path to source file")
     parser.add_argument("--encode", type=str, help="Path to encode file")
+    parser.add_argument(
+        "--frames",
+        type=frame_list,
+        help="Only use this if you want to specify the "
+        "frames to generate, this disables sync frames",
+    )
     parser.add_argument("--image-dir", type=str, help="Path to base image folder")
     parser.add_argument(
         "--indexer",
@@ -83,6 +90,7 @@ if __name__ == "__main__":
         img_generator = GenerateImages(
             source_file=Path(args.source),
             encode_file=Path(args.encode),
+            frames=args.frames,
             image_dir=image_dir,
             indexer=args.indexer,
             index_directory=args.index_dir,

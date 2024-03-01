@@ -2,7 +2,6 @@ import re
 import shutil
 from random import choice
 from pathlib import Path
-from typing import Tuple
 from numpy import linspace
 from unidecode import unidecode
 import awsmfunc
@@ -16,6 +15,7 @@ class GenerateImages:
         self,
         source_file: Path,
         encode_file: Path,
+        frames: str,
         image_dir: Path,
         indexer: str,
         index_directory: None | str,
@@ -38,6 +38,7 @@ class GenerateImages:
         self.source_node = None
         self.reference_source_file = None
         self.encode_file = encode_file
+        self.frames = frames
         self.encode_node = None
         self.image_dir = image_dir
         self.indexer = indexer
@@ -97,7 +98,9 @@ class GenerateImages:
 
         self.check_de_interlaced(num_source_frames, num_encode_frames)
 
-        b_frames = self.get_b_frames(num_source_frames)
+        b_frames = None
+        if not self.frames:
+            b_frames = self.get_b_frames(num_source_frames)
 
         screenshot_comparison_dir, screenshot_sync_dir = self.generate_folders()
 
@@ -109,15 +112,22 @@ class GenerateImages:
 
         vs_source_info, vs_encode_info = self.handle_subtitles(selected_sub_style)
 
-        img_job = self.generate_screens(
-            b_frames,
-            vs_source_info,
-            vs_encode_info,
-            screenshot_comparison_dir,
-            screenshot_sync_dir,
-            selected_sub_style_ref,
-            selected_sub_style_sync,
-        )
+        if not self.frames:
+            img_job = self.generate_screens(
+                b_frames,
+                vs_source_info,
+                vs_encode_info,
+                screenshot_comparison_dir,
+                screenshot_sync_dir,
+                selected_sub_style_ref,
+                selected_sub_style_sync,
+            )
+        else:
+            img_job = self.generate_exact_screens(
+                vs_source_info,
+                vs_encode_info,
+                screenshot_comparison_dir,
+            )
 
         return img_job
 
@@ -165,6 +175,37 @@ class GenerateImages:
                 suffix="a_source__%d",
                 callback=self.screen_gen_callback,
             )
+
+    def generate_exact_screens(
+        self,
+        vs_source_info,
+        vs_encode_info,
+        screenshot_comparison_dir,
+    ) -> str:
+        print("\nGenerating screenshots, please wait", flush=True)
+
+        # generate source images
+        awsmfunc.ScreenGen(
+            vs_source_info,
+            frame_numbers=self.frames,
+            fpng_compression=1,
+            folder=screenshot_comparison_dir,
+            suffix="a_source__%d",
+            callback=self.screen_gen_callback,
+        )
+
+        # generate encode images
+        awsmfunc.ScreenGen(
+            vs_encode_info,
+            frame_numbers=self.frames,
+            fpng_compression=1,
+            folder=screenshot_comparison_dir,
+            suffix="b_encode__%d",
+            callback=self.screen_gen_callback,
+        )
+
+        print("Screen generation completed", flush=True)
+        return str(screenshot_comparison_dir)
 
     def generate_screens(
         self,

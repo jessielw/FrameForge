@@ -5,20 +5,25 @@ A CLI to generate comparison image sets with
 ## Usage
 
 ```
-usage: Comparison Image Generator [-h] [-v] [--source SOURCE] [--encode ENCODE] [--image-dir IMAGE_DIR]
-                                  [--indexer {lsmash,ffms2}] [--index-dir INDEX_DIR] [--sub-size SUB_SIZE]
-                                  [--left-crop LEFT_CROP] [--right-crop RIGHT_CROP] [--top-crop TOP_CROP]
-                                  [--bottom-crop BOTTOM_CROP] [--adv-resize-left ADV_RESIZE_LEFT]
-                                  [--adv-resize-right ADV_RESIZE_RIGHT] [--adv-resize-top ADV_RESIZE_TOP]
-                                  [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map] [--re-sync RE_SYNC]
-                                  [--comparison-count COMPARISON_COUNT] [--subtitle-color SUBTITLE_COLOR]
-                                  [--release-sub-title RELEASE_SUB_TITLE]
+usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--frames FRAMES]
+                  [--image-dir IMAGE_DIR] [--indexer {lsmash,ffms2}]
+                  [--index-dir INDEX_DIR] [--sub-size SUB_SIZE] [--left-crop LEFT_CROP]
+                  [--right-crop RIGHT_CROP] [--top-crop TOP_CROP]
+                  [--bottom-crop BOTTOM_CROP] [--adv-resize-left ADV_RESIZE_LEFT]
+                  [--adv-resize-right ADV_RESIZE_RIGHT]
+                  [--adv-resize-top ADV_RESIZE_TOP]
+                  [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map]
+                  [--re-sync RE_SYNC] [--comparison-count COMPARISON_COUNT]
+                  [--subtitle-color SUBTITLE_COLOR]
+                  [--release-sub-title RELEASE_SUB_TITLE]
 
 options:
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
   --source SOURCE       Path to source file
   --encode ENCODE       Path to encode file
+  --frames FRAMES       Only use this if you want to specify the frames to generate,
+                        this disables sync frames
   --image-dir IMAGE_DIR
                         Path to base image folder
   --indexer {lsmash,ffms2}
@@ -48,7 +53,8 @@ options:
   --subtitle-color SUBTITLE_COLOR
                         Hex color code for subtitle color
   --release-sub-title RELEASE_SUB_TITLE
-                        Release group subtitle name (this will show on the encode images)
+                        Release group subtitle name (this will show on the encode
+                        images)
 ```
 
 ## Supports

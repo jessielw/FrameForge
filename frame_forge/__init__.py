@@ -639,9 +639,13 @@ class GenerateImages:
             self.source_index_path = source_path_obj.parent / Path(
                 f"{source_path_obj.stem}{indexer_ext}"
             )
+        else:
+            self.source_index_path = Path(self.source_index_path)
 
         if not self.encode_index_path or not Path(self.encode_index_path).exists():
             encode_path_obj = Path(self.source_file)
             self.encode_index_path = encode_path_obj.parent / Path(
                 f"{encode_path_obj.stem}{indexer_ext}"
             )
+        else:
+            self.encode_index_path = Path(self.encode_index_path)

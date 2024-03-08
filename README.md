@@ -7,14 +7,13 @@ A CLI to generate comparison image sets with
 ```
 usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--frames FRAMES]
                   [--image-dir IMAGE_DIR] [--indexer {lsmash,ffms2}]
-                  [--index-dir INDEX_DIR] [--sub-size SUB_SIZE] [--left-crop LEFT_CROP]
-                  [--right-crop RIGHT_CROP] [--top-crop TOP_CROP]
+                  [--source-index-path SOURCE_INDEX_PATH]
+                  [--encode-index-path ENCODE_INDEX_PATH] [--sub-size SUB_SIZE]
+                  [--left-crop LEFT_CROP] [--right-crop RIGHT_CROP] [--top-crop TOP_CROP]
                   [--bottom-crop BOTTOM_CROP] [--adv-resize-left ADV_RESIZE_LEFT]
-                  [--adv-resize-right ADV_RESIZE_RIGHT]
-                  [--adv-resize-top ADV_RESIZE_TOP]
-                  [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map]
-                  [--re-sync RE_SYNC] [--comparison-count COMPARISON_COUNT]
-                  [--subtitle-color SUBTITLE_COLOR]
+                  [--adv-resize-right ADV_RESIZE_RIGHT] [--adv-resize-top ADV_RESIZE_TOP]
+                  [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map] [--re-sync RE_SYNC]
+                  [--comparison-count COMPARISON_COUNT] [--subtitle-color SUBTITLE_COLOR]
                   [--release-sub-title RELEASE_SUB_TITLE]
 
 options:
@@ -22,14 +21,16 @@ options:
   -v, --version         show program's version number and exit
   --source SOURCE       Path to source file
   --encode ENCODE       Path to encode file
-  --frames FRAMES       Only use this if you want to specify the frames to generate,
-                        this disables sync frames
+  --frames FRAMES       Only use this if you want to specify the frames to generate, this
+                        disables sync frames
   --image-dir IMAGE_DIR
                         Path to base image folder
   --indexer {lsmash,ffms2}
                         Indexer choice
-  --index-dir INDEX_DIR
-                        Path to look/create indexes
+  --source-index-path SOURCE_INDEX_PATH
+                        Path to look/create indexes for source
+  --encode-index-path ENCODE_INDEX_PATH
+                        Path to look/create indexes for encode
   --sub-size SUB_SIZE   Size of subtitles
   --left-crop LEFT_CROP
                         Left crop
@@ -51,10 +52,9 @@ options:
   --comparison-count COMPARISON_COUNT
                         Amount of comparisons to generate
   --subtitle-color SUBTITLE_COLOR
-                        Hex color code for subtitle color
+                        Hex color code for subtitle color (i.e. --subtitle-color "#fff000")
   --release-sub-title RELEASE_SUB_TITLE
-                        Release group subtitle name (this will show on the encode
-                        images)
+                        Release group subtitle name (this will show on the encode images)
 ```
 
 ## Supports

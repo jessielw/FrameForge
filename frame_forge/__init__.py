@@ -4,6 +4,7 @@ from random import choice
 from pathlib import Path
 from numpy import linspace
 from unidecode import unidecode
+
 import awsmfunc
 import vapoursynth as vs
 from frame_forge.exceptions import FrameForgeError
@@ -18,7 +19,8 @@ class GenerateImages:
         frames: str,
         image_dir: Path,
         indexer: str,
-        index_directory: None | str,
+        source_index_path: None | str,
+        encode_index_path: None | str,
         sub_size: int,
         left_crop: int,
         right_crop: int,
@@ -42,7 +44,8 @@ class GenerateImages:
         self.encode_node = None
         self.image_dir = image_dir
         self.indexer = indexer
-        self.index_dir = index_directory
+        self.source_index_path = source_index_path
+        self.encode_index_path = encode_index_path
         self.sub_size = sub_size
         self.left_crop = left_crop
         self.right_crop = right_crop
@@ -62,6 +65,8 @@ class GenerateImages:
         self.load_plugins()
 
     def process_images(self):
+        self.check_index_paths()
+
         if self.indexer == "lsmash":
             self.index_lsmash()
 
@@ -77,7 +82,7 @@ class GenerateImages:
         # Shadow Depth, Alignment, Left Margin, Right Margin, Vertical Margin, Encoding
 
         # bgr color
-        color = "&H000ac7f5"
+        color = "&H14FF39"
         if self.subtitle_color:
             color = hex_to_bgr(self.subtitle_color)
 
@@ -478,10 +483,9 @@ class GenerateImages:
                 flush=True,
             )
 
-    def index_lsmash(self):
+    def _index_source_lsmash(self):
         print("Indexing source", flush=True)
 
-        # index source file
         # if index is found in the StaxRip temp working directory, attempt to use it
         if (
             Path(str(Path(self.source_file).with_suffix("")) + "_temp/").is_dir()
@@ -491,152 +495,134 @@ class GenerateImages:
         ):
             print("Index found in StaxRip temp, attempting to use", flush=True)
 
-            # define cache path
             lwi_cache_path = Path(
                 str(Path(self.source_file).with_suffix("")) + "_temp/temp.lwi"
             )
 
-            # try to use index on source file with the cache path
-            try:
-                self.source_node = self.core.lsmas.LWLibavSource(
-                    source=self.source_file, cachefile=lwi_cache_path
-                )
-                self.reference_source_file = self.core.lsmas.LWLibavSource(
-                    source=self.source_file, cachefile=lwi_cache_path
-                )
-                print("Using existing index", flush=True)
-            # if index cannot be used
-            except vs.Error:
-                print("L-Smash version miss-match, indexing source again", flush=True)
-
-                # index source file
-                self.source_node = self.core.lsmas.LWLibavSource(self.source_file)
-                self.reference_source_file = self.core.lsmas.LWLibavSource(
-                    self.source_file
-                )
+        elif self.source_index_path.exists():
+            print("Index found, attempting to use", flush=True)
+            lwi_cache_path = self.source_index_path
 
         # if no existing index is found index source file
         else:
-            cache_path = Path(Path(self.source_file).with_suffix(".lwi"))
-            try:
-                # create index
-                self.source_node = self.core.lsmas.LWLibavSource(
-                    self.source_file, cachefile=cache_path
-                )
-                self.reference_source_file = self.core.lsmas.LWLibavSource(
-                    self.source_file, cachefile=cache_path
-                )
-            except vs.Error:
-                # delete index
-                Path(self.source_file).with_suffix(".lwi").unlink(missing_ok=True)
-                # create index
-                self.source_node = self.core.lsmas.LWLibavSource(
-                    self.source_file, cachefile=cache_path
-                )
-                self.reference_source_file = self.core.lsmas.LWLibavSource(
-                    self.source_file, cachefile=cache_path
-                )
+            lwi_cache_path = Path(Path(self.source_file).with_suffix(".lwi"))
 
-        print("Source index completed\n\nIndexing encode", flush=True)
+        try:
+            self.source_node = self.core.lsmas.LWLibavSource(
+                source=self.source_file, cachefile=lwi_cache_path
+            )
+            self.reference_source_file = self.core.lsmas.LWLibavSource(
+                source=self.source_file, cachefile=lwi_cache_path
+            )
+            print("Using existing index", flush=True)
+        except vs.Error:
+            print("L-Smash version miss-match, indexing source again", flush=True)
+            self.source_node = self.core.lsmas.LWLibavSource(self.source_file)
+            self.reference_source_file = self.core.lsmas.LWLibavSource(self.source_file)
 
-        # define a path for encode index to go
-        if self.index_dir:
-            index_base_path = Path(self.index_dir) / Path(self.encode_file).name
-            cache_path_enc = index_base_path.with_suffix(".lwi")
+        print("Source index completed", flush=True)
+
+    def _index_encode_lsmash(self):
+        print("\nIndexing encode", flush=True)
+
+        if self.encode_index_path:
+            cache_path_enc = self.encode_index_path
         else:
             cache_path_enc = Path(Path(self.encode_file).with_suffix(".lwi"))
 
         try:
-            # create index
             self.encode_node = self.core.lsmas.LWLibavSource(
                 self.encode_file, cachefile=cache_path_enc
             )
         except vs.Error:
-            # delete index
             cache_path_enc.unlink(missing_ok=True)
-            # create index
             self.encode_node = self.core.lsmas.LWLibavSource(
+                self.encode_file, cachefile=cache_path_enc
+            )
+
+        print("Encode index completed", flush=True)
+
+    def index_lsmash(self):
+        """Index source/encode with lsmash"""
+
+        self._index_source_lsmash()
+        self._index_encode_lsmash()
+
+    def _index_source_ffms2(self):
+        print("Indexing source", flush=True)
+
+        # if index is found in the StaxRip temp working directory, attempt to use it
+        if (
+            Path(str(Path(self.source_file).with_suffix("")) + "_temp/").is_dir()
+            and Path(
+                str(Path(self.source_file).with_suffix("")) + "_temp/temp.ffindex"
+            ).is_file()
+        ):
+            print("Index found in StaxRip temp, attempting to use", flush=True)
+
+            ffindex_cache_path = Path(
+                str(Path(self.source_file).with_suffix("")) + "_temp/temp.ffindex"
+            )
+
+        elif self.source_index_path.exists():
+            print("Index found, attempting to use", flush=True)
+            ffindex_cache_path = self.source_index_path
+
+        # if no existing index is found index source file
+        else:
+            ffindex_cache_path = Path(Path(self.source_file).with_suffix(".ffindex"))
+            print(
+                "FFMS2 library doesn't allow progress, please wait while the index is completed",
+                flush=True,
+            )
+
+        try:
+            self.source_node = self.core.ffms2.Source(
+                self.source_file, cachefile=ffindex_cache_path
+            )
+            self.reference_source_file = self.core.ffms2.Source(
+                self.source_file, cachefile=ffindex_cache_path
+            )
+        except vs.Error:
+            Path(self.source_file).with_suffix(".ffindex").unlink(missing_ok=True)
+            print(
+                "FFMS2 library doesn't allow progress, please wait while the index is completed",
+                flush=True,
+            )
+            self.source_node = self.core.ffms2.Source(
+                self.source_file, cachefile=ffindex_cache_path
+            )
+            self.reference_source_file = self.core.ffms2.Source(
+                self.source_file, cachefile=ffindex_cache_path
+            )
+
+        print("Source index completed", flush=True)
+
+    def _index_encode_ffms2(self):
+        print("\nIndexing encode", flush=True)
+
+        if self.encode_index_path:
+            cache_path_enc = self.encode_index_path
+        else:
+            cache_path_enc = Path(str(self.encode_file) + ".ffindex")
+
+        try:
+            self.encode_node = self.core.ffms2.Source(
+                self.encode_file, cachefile=cache_path_enc
+            )
+        except vs.Error:
+            cache_path_enc.unlink(missing_ok=True)
+            self.encode_node = self.core.ffms2.Source(
                 self.encode_file, cachefile=cache_path_enc
             )
 
         print("Encode index completed", flush=True)
 
     def index_ffms2(self):
-        print("Indexing source", flush=True)
+        """Index source/encode with ffms2"""
 
-        # index source file
-        # if index is found in the StaxRip temp working directory, attempt to use it
-        if (
-            Path(str(Path(self.source_file).with_suffix("")) + "_temp/").is_dir()
-            and Path(
-                str(Path(self.source_file).with_suffix("")) + "_temp/temp.ffindex"
-            ).is_file()
-        ):
-            print("Index found in StaxRip temp, attempting to use", flush=True)
-
-            # define cache path
-            ffindex_cache_path = Path(
-                str(Path(self.source_file).with_suffix("")) + "_temp/temp.ffindex"
-            )
-
-            # try to use index on source file with the cache path
-            try:
-                self.source_node = self.core.ffms2.Source(
-                    source=self.source_file, cachefile=ffindex_cache_path
-                )
-                self.reference_source_file = self.core.ffms2.Source(
-                    source=self.source_file, cachefile=ffindex_cache_path
-                )
-                print("Using existing index", flush=True)
-            # if index cannot be used
-            except vs.Error:
-                print("FFMS2 version miss-match, indexing source again", flush=True)
-
-                # index source file
-                self.source_node = self.core.ffms2.Source(self.source_file)
-                self.reference_source_file = self.core.ffms2.Source(self.source_file)
-
-        # if no existing index is found index source file
-        else:
-            try:
-                # create index
-                print(
-                    "FFMS2 library doesn't allow progress, please wait while the index is completed",
-                    flush=True,
-                )
-                self.source_node = self.core.ffms2.Source(self.source_file)
-                self.reference_source_file = self.core.ffms2.Source(self.source_file)
-            except vs.Error:
-                # delete index
-                Path(self.source_file).with_suffix(".ffindex").unlink(missing_ok=True)
-                # create index
-                print(
-                    "FFMS2 library doesn't allow progress, please wait while the index is completed",
-                    flush=True,
-                )
-                self.source_node = self.core.ffms2.Source(self.source_file)
-                self.reference_source_file = self.core.ffms2.Source(self.source_file)
-
-        print("Source index completed\n\nIndexing encode", flush=True)
-
-        # define a path for encode index to go
-        if self.index_dir:
-            index_base_path = Path(self.index_dir) / Path(self.encode_file).name
-            cache_path_enc = Path(str(index_base_path) + ".ffindex")
-        else:
-            cache_path_enc = Path(self.encode_file + ".ffindex")
-
-        try:
-            self.encode_node = self.core.ffms2.Source(
-                self.encode_file, cachefile=cache_path_enc
-            )
-        except vs.Error:
-            cache_path_enc.unlink(missing_ok=True)
-            self.encode_node = self.core.ffms2.Source(
-                self.encode_file, cachefile=cache_path_enc
-            )
-
-        print("Encode index completed", flush=True)
+        self._index_source_ffms2()
+        self._index_encode_ffms2()
 
     def load_plugins(self):
         plugin_path = get_working_dir() / "img_plugins"
@@ -645,3 +631,17 @@ class GenerateImages:
         else:
             for plugin in plugin_path.glob("*.dll"):
                 self.core.std.LoadPlugin(Path(plugin).resolve())
+
+    def check_index_paths(self):
+        indexer_ext = ".lwi" if self.indexer == "lsmash" else ".ffindex"
+        if not self.source_index_path or not Path(self.source_index_path).exists():
+            source_path_obj = Path(self.source_file)
+            self.source_index_path = source_path_obj.parent / Path(
+                f"{source_path_obj.stem}{indexer_ext}"
+            )
+
+        if not self.encode_index_path or not Path(self.encode_index_path).exists():
+            encode_path_obj = Path(self.source_file)
+            self.encode_index_path = encode_path_obj.parent / Path(
+                f"{encode_path_obj.stem}{indexer_ext}"
+            )

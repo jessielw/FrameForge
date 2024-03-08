@@ -7,7 +7,7 @@ from frame_forge.cli_utils import frame_list
 
 
 program_name = "FrameForge"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 if __name__ == "__main__":
@@ -30,9 +30,15 @@ if __name__ == "__main__":
         "--indexer",
         type=str,
         choices=["lsmash", "ffms2"],
+        default="lsmash",
         help="Indexer choice",
     )
-    parser.add_argument("--index-dir", type=str, help="Path to look/create indexes")
+    parser.add_argument(
+        "--source-index-path", type=str, help="Path to look/create indexes for source"
+    )
+    parser.add_argument(
+        "--encode-index-path", type=str, help="Path to look/create indexes for encode"
+    )
     parser.add_argument("--sub-size", type=int, default=20, help="Size of subtitles")
     parser.add_argument("--left-crop", type=int, help="Left crop")
     parser.add_argument("--right-crop", type=int, help="Right crop")
@@ -54,7 +60,9 @@ if __name__ == "__main__":
         "--comparison-count", type=int, help="Amount of comparisons to generate"
     )
     parser.add_argument(
-        "--subtitle-color", type=str, help="Hex color code for subtitle color"
+        "--subtitle-color",
+        type=str,
+        help='Hex color code for subtitle color (i.e. --subtitle-color "#fff000")',
     )
     parser.add_argument(
         "--release-sub-title",
@@ -80,6 +88,16 @@ if __name__ == "__main__":
             1,
         )
 
+    index_suffix = ".lwi" if args.indexer == "lsmash" else ".ffindex"
+    for index_input in [args.source_index_path, args.encode_index_path]:
+        if index_input:
+            if Path(index_input).suffix != index_suffix:
+                exit_application(
+                    f"When using {args.indexer} indexer you must use '{index_suffix}' "
+                    "for your source/encode index path suffix",
+                    1,
+                )
+
     if args.image_dir:
         image_dir = Path(args.image_dir)
     else:
@@ -93,7 +111,8 @@ if __name__ == "__main__":
             frames=args.frames,
             image_dir=image_dir,
             indexer=args.indexer,
-            index_directory=args.index_dir,
+            source_index_path=args.source_index_path,
+            encode_index_path=args.encode_index_path,
             sub_size=args.sub_size,
             left_crop=args.left_crop,
             right_crop=args.right_crop,

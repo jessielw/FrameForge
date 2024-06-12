@@ -5,15 +5,13 @@ A CLI to generate comparison image sets with
 ## Usage
 
 ```
-usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--frames FRAMES]
-                  [--image-dir IMAGE_DIR] [--indexer {lsmash,ffms2}]
-                  [--source-index-path SOURCE_INDEX_PATH]
-                  [--encode-index-path ENCODE_INDEX_PATH] [--sub-size SUB_SIZE]
-                  [--left-crop LEFT_CROP] [--right-crop RIGHT_CROP] [--top-crop TOP_CROP]
-                  [--bottom-crop BOTTOM_CROP] [--adv-resize-left ADV_RESIZE_LEFT]
-                  [--adv-resize-right ADV_RESIZE_RIGHT] [--adv-resize-top ADV_RESIZE_TOP]
-                  [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map] [--re-sync RE_SYNC]
-                  [--comparison-count COMPARISON_COUNT] [--subtitle-color SUBTITLE_COLOR]
+usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--frames FRAMES] [--image-dir IMAGE_DIR]
+                  [--indexer {lsmash,ffms2}] [--source-index-path SOURCE_INDEX_PATH]
+                  [--encode-index-path ENCODE_INDEX_PATH] [--sub-size SUB_SIZE] [--sub-alignment SUB_ALIGNMENT]
+                  [--left-crop LEFT_CROP] [--right-crop RIGHT_CROP] [--top-crop TOP_CROP] [--bottom-crop BOTTOM_CROP]
+                  [--adv-resize-left ADV_RESIZE_LEFT] [--adv-resize-right ADV_RESIZE_RIGHT]
+                  [--adv-resize-top ADV_RESIZE_TOP] [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map]
+                  [--re-sync RE_SYNC] [--comparison-count COMPARISON_COUNT] [--subtitle-color SUBTITLE_COLOR]
                   [--release-sub-title RELEASE_SUB_TITLE]
 
 options:
@@ -21,8 +19,7 @@ options:
   -v, --version         show program's version number and exit
   --source SOURCE       Path to source file
   --encode ENCODE       Path to encode file
-  --frames FRAMES       Only use this if you want to specify the frames to generate, this
-                        disables sync frames
+  --frames FRAMES       Only use this if you want to specify the frames to generate, this disables sync frames
   --image-dir IMAGE_DIR
                         Path to base image folder
   --indexer {lsmash,ffms2}
@@ -32,6 +29,8 @@ options:
   --encode-index-path ENCODE_INDEX_PATH
                         Path to look/create indexes for encode
   --sub-size SUB_SIZE   Size of subtitles
+  --sub-alignment SUB_ALIGNMENT
+                        Alignment of subtitles (.ass)
   --left-crop LEFT_CROP
                         Left crop
   --right-crop RIGHT_CROP

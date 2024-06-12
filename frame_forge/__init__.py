@@ -22,6 +22,7 @@ class GenerateImages:
         source_index_path: None | str,
         encode_index_path: None | str,
         sub_size: int,
+        sub_alignment: int,
         left_crop: int,
         right_crop: int,
         top_crop: int,
@@ -47,6 +48,7 @@ class GenerateImages:
         self.source_index_path = source_index_path
         self.encode_index_path = encode_index_path
         self.sub_size = sub_size
+        self.sub_alignment = sub_alignment
         self.left_crop = left_crop
         self.right_crop = right_crop
         self.top_crop = top_crop
@@ -88,7 +90,7 @@ class GenerateImages:
 
         selected_sub_style = (
             f"Segoe UI,{self.sub_size},{color},&H00000000,&H00000000,&H00000000,"
-            "1,0,0,0,100,100,0,0,1,1,0,7,10,10,10,1"
+            f"1,0,0,0,100,100,0,0,1,1,0,{self.sub_alignment},10,10,10,1"
         )
         sync_sub_base = (
             "Segoe UI,{size},&H31FF31&,&H00000000,&H00000000,&H00000000,"

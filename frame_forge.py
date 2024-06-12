@@ -7,7 +7,7 @@ from frame_forge.cli_utils import frame_list
 
 
 program_name = "FrameForge"
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 
 
 if __name__ == "__main__":
@@ -40,6 +40,9 @@ if __name__ == "__main__":
         "--encode-index-path", type=str, help="Path to look/create indexes for encode"
     )
     parser.add_argument("--sub-size", type=int, default=20, help="Size of subtitles")
+    parser.add_argument(
+        "--sub-alignment", type=int, default=7, help="Alignment of subtitles (.ass)"
+    )
     parser.add_argument("--left-crop", type=int, help="Left crop")
     parser.add_argument("--right-crop", type=int, help="Right crop")
     parser.add_argument("--top-crop", type=int, help="Top crop")
@@ -114,6 +117,7 @@ if __name__ == "__main__":
             source_index_path=args.source_index_path,
             encode_index_path=args.encode_index_path,
             sub_size=args.sub_size,
+            sub_alignment=args.sub_alignment,
             left_crop=args.left_crop,
             right_crop=args.right_crop,
             top_crop=args.top_crop,

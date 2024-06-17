@@ -3,7 +3,6 @@ import shutil
 from random import choice
 from pathlib import Path
 from numpy import linspace
-from unidecode import unidecode
 
 import awsmfunc
 import vapoursynth as vs
@@ -379,9 +378,6 @@ class GenerateImages:
             image_output_dir = Path(
                 Path(self.encode_file).parent / f"{Path(self.encode_file).stem}_images"
             )
-
-        # remove any accent characters from path
-        image_output_dir = Path(unidecode(str(image_output_dir)))
 
         # check if temp image dir exists, if so delete it!
         if image_output_dir.exists():

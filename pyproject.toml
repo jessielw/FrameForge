@@ -8,9 +8,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "3.11.5"
-awsmfunc = "^1.3.4"
-vapoursynth-portable = "64"
+vapoursynth-portable = "65"
 numpy = "^1.26.2"
+awsmfunc = "^1.3.4"
 
 
 [tool.poetry.group.dev.dependencies]

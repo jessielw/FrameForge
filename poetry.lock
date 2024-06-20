@@ -280,28 +280,28 @@ testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jar
 
 [[package]]
 name = "vapoursynth"
-version = "64"
+version = "65"
 description = "A frameserver for the 21st century"
 optional = false
 python-versions = "*"
 files = [
-    {file = "VapourSynth-64-cp311-cp311-win_amd64.whl", hash = "sha256:ad046a704537276f7ebb4132e1210e8922ec4b2403a4b44f5fe30fd9456a6412"},
-    {file = "VapourSynth-64-cp38-cp38-win_amd64.whl", hash = "sha256:794f93bcaa1ce79510c11962f677a7d18685a0c29aa36586cb307d1eb9d7f2e0"},
-    {file = "VapourSynth-64.zip", hash = "sha256:29425a135ca68cbb17b3dfcad0097375b75f94af1f499ba89bcd2b03b2651846"},
+    {file = "VapourSynth-65-cp311-cp311-win_amd64.whl", hash = "sha256:9fab72bb6dbcdd8d0e6643da68908f85387bc764b836524e97a1e6e8989ca13e"},
+    {file = "VapourSynth-65-cp38-cp38-win_amd64.whl", hash = "sha256:d9b49b595dc929d63250bd82f05e75238b6dfc4a50ab08e7fc4fe4f8888f6b95"},
+    {file = "VapourSynth-65.zip", hash = "sha256:1d42d461ef9988a3477134e478a2291d79f3469635cde8af2c66b1e87c36f711"},
 ]
 
 [[package]]
 name = "vapoursynth-portable"
-version = "64"
+version = "65"
 description = "A frameserver for the 21st century"
 optional = false
 python-versions = "*"
 files = [
-    {file = "VapourSynth_portable-64-py2.py3-none-win_amd64.whl", hash = "sha256:82b26b38774197a7ef53cbd3206bafb02d197100fad513d635bf83f9981dad6c"},
+    {file = "VapourSynth_portable-65-py2.py3-none-win_amd64.whl", hash = "sha256:6a66615d8a25a71766d035054f9980fd8be47dbd97332e9c068933d1b25061b3"},
 ]
 
 [package.dependencies]
-vapoursynth = "64"
+vapoursynth = "65"
 
 [[package]]
 name = "vs-rekt"
@@ -335,4 +335,4 @@ vapoursynth = "*"
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.5"
-content-hash = "759b5ce3003b78e4f9730f1df864a030c6c964151623a94a87cfa4b4f258c1ed"
+content-hash = "4425fd0e4eb9ee21b1b0d79c3824a831cdbe45b6733c9477065c8cdd265731a8"

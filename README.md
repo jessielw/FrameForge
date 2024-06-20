@@ -6,7 +6,7 @@ A CLI to generate comparison image sets with
 
 ```
 usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--frames FRAMES] [--image-dir IMAGE_DIR]
-                  [--indexer {lsmash,ffms2}] [--source-index-path SOURCE_INDEX_PATH]
+                  [--indexer {lsmash,ffms2}] [--img-lib {imwri,fpng}] [--source-index-path SOURCE_INDEX_PATH]
                   [--encode-index-path ENCODE_INDEX_PATH] [--sub-size SUB_SIZE] [--sub-alignment SUB_ALIGNMENT]
                   [--left-crop LEFT_CROP] [--right-crop RIGHT_CROP] [--top-crop TOP_CROP] [--bottom-crop BOTTOM_CROP]
                   [--adv-resize-left ADV_RESIZE_LEFT] [--adv-resize-right ADV_RESIZE_RIGHT]
@@ -24,6 +24,8 @@ options:
                         Path to base image folder
   --indexer {lsmash,ffms2}
                         Indexer choice
+  --img-lib {imwri,fpng}
+                        Image library to use
   --source-index-path SOURCE_INDEX_PATH
                         Path to look/create indexes for source
   --encode-index-path ENCODE_INDEX_PATH

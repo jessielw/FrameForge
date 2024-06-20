@@ -7,7 +7,7 @@ from frame_forge.cli_utils import frame_list
 
 
 program_name = "FrameForge"
-__version__ = "1.2.2"
+__version__ = "1.3.0"
 
 
 if __name__ == "__main__":
@@ -32,6 +32,13 @@ if __name__ == "__main__":
         choices=["lsmash", "ffms2"],
         default="lsmash",
         help="Indexer choice",
+    )
+    parser.add_argument(
+        "--img-lib",
+        type=str,
+        choices=["imwri", "fpng"],
+        default="fpng",
+        help="Image library to use",
     )
     parser.add_argument(
         "--source-index-path", type=str, help="Path to look/create indexes for source"
@@ -114,6 +121,7 @@ if __name__ == "__main__":
             frames=args.frames,
             image_dir=image_dir,
             indexer=args.indexer,
+            img_lib=args.img_lib,
             source_index_path=args.source_index_path,
             encode_index_path=args.encode_index_path,
             sub_size=args.sub_size,
@@ -134,8 +142,18 @@ if __name__ == "__main__":
             subtitle_color=args.subtitle_color,
             release_sub_title=args.release_sub_title,
         )
+    except Exception as init_error:
+        exit_application(f"Initiation Error: {init_error}", 1)
+
+    try:
         img_gen = img_generator.process_images()
         if img_gen:
-            exit_application(f"Output: {img_gen}", 0)
-    except FrameForgeError as error:
-        exit_application(error, 1)
+            exit_application(f"\nOutput: {img_gen}", 0)
+    except FrameForgeError as ff_error:
+        img_generator.clean_temp(False)
+        exit_application(str(ff_error), 1)
+    except Exception as except_error:
+        img_generator.clean_temp(False)
+        exit_application(f"Unhandled Exception: {except_error}", 1)
+    finally:
+        img_generator.clean_temp(False)

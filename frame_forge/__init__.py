@@ -1,11 +1,13 @@
 import re
 import shutil
+import tempfile
 from random import choice
 from pathlib import Path
+from typing import Tuple
 from numpy import linspace
 
-import awsmfunc
 import vapoursynth as vs
+from awsmfunc import ScreenGenEncoder, ScreenGen, FrameInfo, DynamicTonemap
 from frame_forge.exceptions import FrameForgeError
 from frame_forge.utils import get_working_dir, hex_to_bgr
 
@@ -18,6 +20,7 @@ class GenerateImages:
         frames: str,
         image_dir: Path,
         indexer: str,
+        img_lib: str,
         source_index_path: None | str,
         encode_index_path: None | str,
         sub_size: int,
@@ -44,6 +47,7 @@ class GenerateImages:
         self.encode_node = None
         self.image_dir = image_dir
         self.indexer = indexer
+        self.img_lib = ScreenGenEncoder(img_lib)
         self.source_index_path = source_index_path
         self.encode_index_path = encode_index_path
         self.sub_size = sub_size
@@ -65,7 +69,9 @@ class GenerateImages:
         self.core = vs.core
         self.load_plugins()
 
-    def process_images(self):
+        self.temp_dir: Path = None
+
+    def process_images(self) -> Path:
         self.check_index_paths()
 
         if self.indexer == "lsmash":
@@ -108,7 +114,11 @@ class GenerateImages:
         if not self.frames:
             b_frames = self.get_b_frames(num_source_frames)
 
-        screenshot_comparison_dir, screenshot_sync_dir = self.generate_folders()
+        (
+            temp_screenshot_comparison_dir,
+            temp_selected_dir,
+            temp_screenshot_sync_dir,
+        ) = self.generate_temp_folders()
 
         self.handle_crop()
 
@@ -119,23 +129,27 @@ class GenerateImages:
         vs_source_info, vs_encode_info = self.handle_subtitles(selected_sub_style)
 
         if not self.frames:
-            img_job = self.generate_screens(
+            self.generate_screens(
                 b_frames,
                 vs_source_info,
                 vs_encode_info,
-                screenshot_comparison_dir,
-                screenshot_sync_dir,
+                temp_screenshot_comparison_dir,
+                temp_screenshot_sync_dir,
                 selected_sub_style_ref,
                 selected_sub_style_sync,
             )
         else:
-            img_job = self.generate_exact_screens(
+            self.generate_exact_screens(
                 vs_source_info,
                 vs_encode_info,
-                screenshot_comparison_dir,
+                temp_screenshot_comparison_dir,
             )
 
-        return img_job
+        final_folder = self.generate_final_folder()
+        self.move_images(temp_screenshot_comparison_dir.parent, final_folder)
+        self.clean_temp()
+
+        return final_folder
 
     @staticmethod
     def screen_gen_callback(sg_call_back):
@@ -154,13 +168,14 @@ class GenerateImages:
                 text=f"Reference\nFrame: {ref_frame}",
                 style=selected_sub_style_ref,
             )
-            awsmfunc.ScreenGen(
+            ScreenGen(
                 vs_encode_ref_info,
                 frame_numbers=[ref_frame],
                 fpng_compression=1,
                 folder=screenshot_sync_dir,
                 suffix="b_encode__%d",
                 callback=self.screen_gen_callback,
+                encoder=self.img_lib,
             )
 
     def generate_sync_screens(
@@ -173,13 +188,14 @@ class GenerateImages:
                 text=f"Sync\nFrame: {sync_frame}",
                 style=selected_sub_style_sync,
             )
-            awsmfunc.ScreenGen(
+            ScreenGen(
                 vs_sync_info,
                 frame_numbers=[sync_frame],
                 fpng_compression=1,
                 folder=Path(screenshot_sync_dir),
                 suffix="a_source__%d",
                 callback=self.screen_gen_callback,
+                encoder=self.img_lib,
             )
 
     def generate_exact_screens(
@@ -187,31 +203,33 @@ class GenerateImages:
         vs_source_info,
         vs_encode_info,
         screenshot_comparison_dir,
-    ) -> str:
+    ) -> Path:
         print("\nGenerating screenshots, please wait", flush=True)
 
         # generate source images
-        awsmfunc.ScreenGen(
+        ScreenGen(
             vs_source_info,
             frame_numbers=self.frames,
             fpng_compression=1,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
             callback=self.screen_gen_callback,
+            encoder=self.img_lib,
         )
 
         # generate encode images
-        awsmfunc.ScreenGen(
+        ScreenGen(
             vs_encode_info,
             frame_numbers=self.frames,
             fpng_compression=1,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",
             callback=self.screen_gen_callback,
+            encoder=self.img_lib,
         )
 
         print("Screen generation completed", flush=True)
-        return str(screenshot_comparison_dir)
+        return screenshot_comparison_dir
 
     def generate_screens(
         self,
@@ -222,7 +240,7 @@ class GenerateImages:
         screenshot_sync_dir,
         selected_sub_style_ref,
         selected_sub_style_sync,
-    ) -> str:
+    ) -> Path:
         print("\nGenerating screenshots, please wait", flush=True)
 
         # handle re_sync if needed
@@ -239,23 +257,25 @@ class GenerateImages:
             sync_frames = b_frames
 
         # generate source images
-        awsmfunc.ScreenGen(
+        ScreenGen(
             vs_source_info,
             frame_numbers=sync_frames,
             fpng_compression=1,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
             callback=self.screen_gen_callback,
+            encoder=self.img_lib,
         )
 
         # generate encode images
-        awsmfunc.ScreenGen(
+        ScreenGen(
             vs_encode_info,
             frame_numbers=b_frames,
             fpng_compression=1,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",
             callback=self.screen_gen_callback,
+            encoder=self.img_lib,
         )
 
         # generate some sync frames
@@ -294,13 +314,13 @@ class GenerateImages:
         )
 
         print("Screen generation completed", flush=True)
-        return str(screenshot_comparison_dir)
+        return screenshot_comparison_dir
 
     def handle_subtitles(self, selected_sub_style):
         vs_source_info = self.core.sub.Subtitle(
             clip=self.source_node, text="Source", style=selected_sub_style
         )
-        vs_encode_info = awsmfunc.FrameInfo(
+        vs_encode_info = FrameInfo(
             clip=self.encode_node,
             title=self.release_sub_title if self.release_sub_title else "",
             style=selected_sub_style,
@@ -310,10 +330,8 @@ class GenerateImages:
 
     def handle_hdr(self):
         if self.tone_map:
-            self.source_node = awsmfunc.DynamicTonemap(
-                clip=self.source_node, libplacebo=False
-            )
-            self.encode_node = awsmfunc.DynamicTonemap(
+            self.source_node = DynamicTonemap(clip=self.source_node, libplacebo=False)
+            self.encode_node = DynamicTonemap(
                 clip=self.encode_node,
                 reference=self.reference_source_file,
                 libplacebo=False,
@@ -370,8 +388,8 @@ class GenerateImages:
                 bottom=self.bottom_crop if self.bottom_crop else 0,
             )
 
-    def generate_folders(self):
-        print("\nCreating folders for images", flush=True)
+    def generate_final_folder(self) -> Path:
+        print("\nCreating final output folder", flush=True)
         if self.image_dir:
             image_output_dir = Path(self.image_dir)
         else:
@@ -379,31 +397,58 @@ class GenerateImages:
                 Path(self.encode_file).parent / f"{Path(self.encode_file).stem}_images"
             )
 
-        # check if temp image dir exists, if so delete it!
         if image_output_dir.exists():
             shutil.rmtree(image_output_dir, ignore_errors=True)
 
-        # create main image dir
         image_output_dir.mkdir(exist_ok=True, parents=True)
-
-        # create comparison image directory and define it as variable
-        Path(Path(image_output_dir) / "img_comparison").mkdir(exist_ok=True)
-        screenshot_comparison_dir = str(Path(Path(image_output_dir) / "img_comparison"))
-
-        # create selected image directory and define it as variable
-        Path(Path(image_output_dir) / "img_selected").mkdir(exist_ok=True)
-
-        # create sync image directory and define it as variable
-        Path(Path(image_output_dir) / "img_sync").mkdir(exist_ok=True)
-        screenshot_sync_dir = str(Path(Path(image_output_dir) / "img_sync"))
-
-        # create sub directories
-        Path(Path(image_output_dir) / "img_sync/sync1").mkdir(exist_ok=True)
-        Path(Path(image_output_dir) / "img_sync/sync2").mkdir(exist_ok=True)
 
         print("Folder creation completed", flush=True)
 
-        return screenshot_comparison_dir, screenshot_sync_dir
+        return image_output_dir
+
+    def generate_temp_folders(self) -> Tuple[Path, Path, Path]:
+        print("\nCreating temporary folders for images", flush=True)
+        self.temp_dir = Path(tempfile.mkdtemp(prefix="ff_"))
+
+        screenshot_comparison_dir = Path(Path(self.temp_dir) / "img_comparison")
+        screenshot_comparison_dir.mkdir(exist_ok=True)
+
+        selected_dir = Path(Path(self.temp_dir) / "img_selected")
+        selected_dir.mkdir(exist_ok=True)
+
+        screenshot_sync_dir = Path(Path(self.temp_dir) / "img_sync")
+        screenshot_sync_dir.mkdir(exist_ok=True)
+
+        Path(screenshot_sync_dir / "sync1").mkdir(exist_ok=True)
+        Path(screenshot_sync_dir / "sync2").mkdir(exist_ok=True)
+
+        print("Folder creation completed", flush=True)
+
+        return screenshot_comparison_dir, selected_dir, screenshot_sync_dir
+
+    def move_images(self, temp_folder: Path, output_folder: Path) -> None:
+        print("\nMoving generated images")
+
+        for sub_folder in temp_folder.iterdir():
+            if sub_folder.is_dir():
+                target_sub_folder = output_folder / sub_folder.name
+                target_sub_folder.mkdir(parents=True, exist_ok=True)
+
+                for item in sub_folder.iterdir():
+                    target_item = target_sub_folder / item.name
+                    if item.is_dir():
+                        shutil.move(item, target_item)
+                    else:
+                        shutil.move(item, target_sub_folder)
+
+        print("Image move completed", flush=True)
+
+    def clean_temp(self, status: bool = True) -> None:
+        if status:
+            print("\nRemoving temp folder")
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+        if status:
+            print("Temp folder removal completed")
 
     def get_b_frames(self, num_source_frames):
         print(

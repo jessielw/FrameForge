@@ -465,9 +465,11 @@ class GenerateImages:
         )
 
         try:
+            pict_types = ("B", b"B")
             for i, frame in enumerate(b_frames):
                 while (
-                    self.encode_node.get_frame(frame).props["_PictType"].decode() != "B"
+                    self.encode_node.get_frame(frame).props["_PictType"]
+                    not in pict_types
                 ):
                     frame += 1
                 b_frames[i] = frame

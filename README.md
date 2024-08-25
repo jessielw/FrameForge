@@ -1,6 +1,6 @@
 # Image-Generator
 
-A CLI to generate comparison image sets with
+A CLI to generate comparison image sets utilizing the power of VapourSynth
 
 ## Usage
 

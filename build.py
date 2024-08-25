@@ -1,5 +1,5 @@
 from pathlib import Path
-from subprocess import run
+from subprocess import run, PIPE
 import os
 import shutil
 import sys
@@ -31,11 +31,23 @@ def build_app():
     icon_path = project_root / "images" / "icon.ico"
     additional_hooks_path = Path(Path.cwd() / "hooks")
 
-    # paths to needed vapoursynth files
-    vapoursynth_64 = project_root / ".venv" / "Lib" / "site-packages" / "vapoursynth64"
-    vapoursynth_64_portable = (
-        project_root / ".venv" / "Lib" / "site-packages" / "portable.vs"
+    # get poetry venv path
+    poetry_venv_path = run(
+        ["cmd", "/c", "poetry", "env", "info", "--path"],
+        stdout=PIPE,
+        stderr=PIPE,
+        text=True,
+        check=True,
     )
+    if poetry_venv_path.returncode == 0 and poetry_venv_path.stdout:
+        poetry_venv_path = Path(poetry_venv_path.stdout.strip())
+        site_packages = poetry_venv_path / "Lib" / "site-packages"
+
+        # get paths to needed vapoursynth files in poetry venv
+        vapoursynth_64 = site_packages / "vapoursynth64"
+        vapoursynth_64_portable = site_packages / "portable.vs"
+    else:
+        raise FileNotFoundError("Cannot find path to poetry venv")
 
     # Change directory so PyInstaller outputs all of its files in its own folder
     os.chdir(pyinstaller_folder)

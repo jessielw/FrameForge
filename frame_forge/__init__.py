@@ -398,7 +398,10 @@ class GenerateImages:
             )
 
         if image_output_dir.exists():
-            shutil.rmtree(image_output_dir, ignore_errors=True)
+            for folder in ("img_comparison", "img_selected", "img_sync"):
+                rm_path = image_output_dir / folder
+                if rm_path.is_dir() and rm_path.exists():
+                    shutil.rmtree(rm_path, ignore_errors=True)
 
         image_output_dir.mkdir(exist_ok=True, parents=True)
 
@@ -688,7 +691,7 @@ class GenerateImages:
             self.source_index_path = Path(self.source_index_path)
 
         if not self.encode_index_path or not Path(self.encode_index_path).exists():
-            encode_path_obj = Path(self.source_file)
+            encode_path_obj = Path(self.encode_file)
             self.encode_index_path = encode_path_obj.parent / Path(
                 f"{encode_path_obj.stem}{indexer_ext}"
             )

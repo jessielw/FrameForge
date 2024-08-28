@@ -22,6 +22,7 @@ hiddenimports = [
     "collections.namedtuple",
     "collections.abc.Iterable",
     "collections.abc.Mapping",
+    "concurrent.futures",
     "concurrent.futures.Future",
     "fractions",
 ]

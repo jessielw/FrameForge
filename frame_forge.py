@@ -7,7 +7,7 @@ from frame_forge.cli_utils import frame_list
 
 
 program_name = "FrameForge"
-__version__ = "1.3.3"
+__version__ = "1.3.4"
 
 
 if __name__ == "__main__":

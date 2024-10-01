@@ -209,7 +209,9 @@ class GenerateImages:
         # generate source images
         ScreenGen(
             vs_source_info,
-            frame_numbers=self.frames,
+            frame_numbers=[
+                self.frames[i] for i in range(len(self.frames)) if i % 2 == 0
+            ],
             fpng_compression=1,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
@@ -220,7 +222,9 @@ class GenerateImages:
         # generate encode images
         ScreenGen(
             vs_encode_info,
-            frame_numbers=self.frames,
+            frame_numbers=[
+                self.frames[i] for i in range(len(self.frames)) if i % 2 != 0
+            ],
             fpng_compression=1,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",

@@ -459,7 +459,7 @@ class GenerateImages:
 
     def get_b_frames(self, num_source_frames):
         print(
-            f"\nGenerating {self.comparison_count} 'B' frames for " "comparison images",
+            f"\nGenerating {self.comparison_count} 'B' frames for comparison images",
             flush=True,
         )
 
@@ -539,24 +539,25 @@ class GenerateImages:
         print("Indexing source", flush=True)
 
         # if index is found in the StaxRip temp working directory, attempt to use it
-        if (
-            Path(str(Path(self.source_file).with_suffix("")) + "_temp/").is_dir()
-            and Path(
-                str(Path(self.source_file).with_suffix("")) + "_temp/temp.lwi"
-            ).is_file()
-        ):
-            print("Index found in StaxRip temp, attempting to use", flush=True)
+        src_file_path = Path(self.source_file)
+        tmp_dir = src_file_path.parent / f"{src_file_path.stem}_temp"
+        tmp_dir_2 = src_file_path.parent / f"{src_file_path.name}_temp"
 
-            lwi_cache_path = Path(
-                str(Path(self.source_file).with_suffix("")) + "_temp/temp.lwi"
-            )
+        lwi_cache_path = None
 
-        elif self.source_index_path.exists():
+        for dir_path in (tmp_dir, tmp_dir_2):
+            index_path = dir_path / "temp.lwi"
+            if index_path.exists():
+                print("Index found in StaxRip temp, attempting to use", flush=True)
+                lwi_cache_path = index_path
+                break
+
+        if not lwi_cache_path and self.source_index_path.exists():
             print("Index found, attempting to use", flush=True)
             lwi_cache_path = self.source_index_path
 
         # if no existing index is found index source file
-        else:
+        elif not lwi_cache_path:
             lwi_cache_path = Path(Path(self.source_file).with_suffix(".lwi"))
 
         try:
@@ -604,24 +605,25 @@ class GenerateImages:
         print("Indexing source", flush=True)
 
         # if index is found in the StaxRip temp working directory, attempt to use it
-        if (
-            Path(str(Path(self.source_file).with_suffix("")) + "_temp/").is_dir()
-            and Path(
-                str(Path(self.source_file).with_suffix("")) + "_temp/temp.ffindex"
-            ).is_file()
-        ):
-            print("Index found in StaxRip temp, attempting to use", flush=True)
+        src_file_path = Path(self.source_file)
+        tmp_dir = src_file_path.parent / f"{src_file_path.stem}_temp"
+        tmp_dir_2 = src_file_path.parent / f"{src_file_path.name}_temp"
 
-            ffindex_cache_path = Path(
-                str(Path(self.source_file).with_suffix("")) + "_temp/temp.ffindex"
-            )
+        ffindex_cache_path = None
 
-        elif self.source_index_path.exists():
+        for dir_path in (tmp_dir, tmp_dir_2):
+            index_path = dir_path / "temp.ffindex"
+            if index_path.exists():
+                print("Index found in StaxRip temp, attempting to use", flush=True)
+                ffindex_cache_path = index_path
+                break
+
+        if not ffindex_cache_path and self.source_index_path.exists():
             print("Index found, attempting to use", flush=True)
             ffindex_cache_path = self.source_index_path
 
         # if no existing index is found index source file
-        else:
+        elif not ffindex_cache_path:
             ffindex_cache_path = Path(Path(self.source_file).with_suffix(".ffindex"))
             print(
                 "FFMS2 library doesn't allow progress, please wait while the index is completed",

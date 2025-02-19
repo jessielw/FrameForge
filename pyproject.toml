@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "frame-forge"
-version = "1.3.4"
+version = "1.3.5"
 description = "CLI to offload image generation to"
 authors = ["jlw4049 <jlw_4049@hotmail.com>"]
 license = "MIT"

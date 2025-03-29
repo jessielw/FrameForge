@@ -114,6 +114,7 @@ if __name__ == "__main__":
         image_dir = Path(Path(args.encode).parent / f"{Path(args.encode).stem}_images")
     image_dir.mkdir(parents=True, exist_ok=True)
 
+    img_generator: GenerateImages | None = None
     try:
         img_generator = GenerateImages(
             source_file=Path(args.source),
@@ -145,15 +146,16 @@ if __name__ == "__main__":
     except Exception as init_error:
         exit_application(f"Initiation Error: {init_error}", 1)
 
-    try:
-        img_gen = img_generator.process_images()
-        if img_gen:
-            exit_application(f"\nOutput: {img_gen}", 0)
-    except FrameForgeError as ff_error:
-        img_generator.clean_temp(False)
-        exit_application(str(ff_error), 1)
-    except Exception as except_error:
-        img_generator.clean_temp(False)
-        exit_application(f"Unhandled Exception: {except_error}", 1)
-    finally:
-        img_generator.clean_temp(False)
+    if img_generator:
+        try:
+            img_gen = img_generator.process_images()
+            if img_gen:
+                exit_application(f"\nOutput: {img_gen}", 0)
+        except FrameForgeError as ff_error:
+            img_generator.clean_temp(False)
+            exit_application(str(ff_error), 1)
+        except Exception as except_error:
+            img_generator.clean_temp(False)
+            exit_application(f"Unhandled Exception: {except_error}", 1)
+        finally:
+            img_generator.clean_temp(False)

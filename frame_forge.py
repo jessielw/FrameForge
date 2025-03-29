@@ -143,19 +143,18 @@ if __name__ == "__main__":
             subtitle_color=args.subtitle_color,
             release_sub_title=args.release_sub_title,
         )
+        if img_generator:
+            try:
+                img_gen = img_generator.process_images()
+                if img_gen:
+                    exit_application(f"\nOutput: {img_gen}", 0)
+            except FrameForgeError as ff_error:
+                img_generator.clean_temp(False)
+                exit_application(str(ff_error), 1)
+            except Exception as except_error:
+                img_generator.clean_temp(False)
+                exit_application(f"Unhandled Exception: {except_error}", 1)
+            finally:
+                img_generator.clean_temp(False)
     except Exception as init_error:
         exit_application(f"Initiation Error: {init_error}", 1)
-
-    if img_generator:
-        try:
-            img_gen = img_generator.process_images()
-            if img_gen:
-                exit_application(f"\nOutput: {img_gen}", 0)
-        except FrameForgeError as ff_error:
-            img_generator.clean_temp(False)
-            exit_application(str(ff_error), 1)
-        except Exception as except_error:
-            img_generator.clean_temp(False)
-            exit_application(f"Unhandled Exception: {except_error}", 1)
-        finally:
-            img_generator.clean_temp(False)

@@ -114,7 +114,6 @@ if __name__ == "__main__":
         image_dir = Path(Path(args.encode).parent / f"{Path(args.encode).stem}_images")
     image_dir.mkdir(parents=True, exist_ok=True)
 
-    img_generator: GenerateImages | None = None
     try:
         img_generator = GenerateImages(
             source_file=Path(args.source),

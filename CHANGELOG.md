@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New arg **--subtitle-secondary-color**, this allows control of the secondary subtitle color.
 - New arg **--subtitle-outline-color**, this allows control of the outline subtitle color.
 - New arg **--subtitle-back-color**, this allows control of the back subtitle color.
+- New args **--sub-bold**, **--sub-italic**, **--sub-underline**, **--sub-strikeout** this allows control of several styles (bold defaults to 1).
 
 ### Changed
 

@@ -104,6 +104,34 @@ if __name__ == "__main__":
         help="Font name for subtitles",
     )
     parser.add_argument(
+        "--sub-bold",
+        type=int,
+        default=1,
+        choices=(0, 1),
+        help="Bold formatting for subtitles (0=off, 1=on)",
+    )
+    parser.add_argument(
+        "--sub-italic",
+        type=int,
+        default=0,
+        choices=(0, 1),
+        help="Italic formatting for subtitles (0=off, 1=on)",
+    )
+    parser.add_argument(
+        "--sub-underline",
+        type=int,
+        default=0,
+        choices=(0, 1),
+        help="Underline formatting for subtitles (0=off, 1=on)",
+    )
+    parser.add_argument(
+        "--sub-strikeout",
+        type=int,
+        default=0,
+        choices=(0, 1),
+        help="Strikeout formatting for subtitles (0=off, 1=on)",
+    )
+    parser.add_argument(
         "--source-sub-title",
         type=str,
         default="Source",
@@ -194,6 +222,10 @@ if __name__ == "__main__":
             sub_outline_color=args.subtitle_outline_color,
             sub_back_color=args.subtitle_back_color,
             sub_font_name=args.sub_font_name,
+            sub_bold=args.sub_bold,
+            sub_italic=args.sub_italic,
+            sub_underline=args.sub_underline,
+            sub_strikeout=args.sub_strikeout,
             source_sub_title=args.source_sub_title,
             release_sub_title=args.encode_sub_title,
         )

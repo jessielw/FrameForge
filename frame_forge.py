@@ -74,24 +74,24 @@ if __name__ == "__main__":
         "--comparison-count", type=int, help="Amount of comparisons to generate"
     )
     parser.add_argument(
-        "--subtitle-color",
+        "--sub-color",
         type=str,
-        help='Hex color code for subtitle color (i.e. --subtitle-color "#fff000")',
+        help='Hex color code for subtitle color (i.e. --sub-color "#fff000")',
     )
     parser.add_argument(
-        "--subtitle-secondary-color",
+        "--sub-secondary-color",
         type=str,
-        help='Hex color code for subtitle secondary color (i.e. --subtitle-color "#fff000")',
+        help='Hex color code for subtitle secondary color (i.e. --sub-color "#fff000")',
     )
     parser.add_argument(
-        "--subtitle-outline-color",
+        "--sub-outline-color",
         type=str,
-        help='Hex color code for subtitle outline color (i.e. --subtitle-color "#fff000")',
+        help='Hex color code for subtitle outline color (i.e. --sub-color "#fff000")',
     )
     parser.add_argument(
-        "--subtitle-back-color",
+        "--sub-back-color",
         type=str,
-        help='Hex color code for subtitle back color (i.e. --subtitle-color "#fff000")',
+        help='Hex color code for subtitle back color (i.e. --sub-color "#fff000")',
     )
     parser.add_argument("--sub-size", type=int, default=20, help="Size of subtitles")
     parser.add_argument(
@@ -217,10 +217,10 @@ if __name__ == "__main__":
             else 20,
             sub_size=args.sub_size,
             sub_alignment=args.sub_alignment,
-            sub_color=args.subtitle_color,
-            sub_secondary_color=args.subtitle_secondary_color,
-            sub_outline_color=args.subtitle_outline_color,
-            sub_back_color=args.subtitle_back_color,
+            sub_color=args.sub_color,
+            sub_secondary_color=args.sub_secondary_color,
+            sub_outline_color=args.sub_outline_color,
+            sub_back_color=args.sub_back_color,
             sub_font_name=args.sub_font_name,
             sub_bold=args.sub_bold,
             sub_italic=args.sub_italic,

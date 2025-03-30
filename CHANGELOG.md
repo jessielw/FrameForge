@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New arg **--source-sub-title**, to define the **Source** image subtitles (defaults to 'Source').
 - New arg **--fpng-compression**, this allows control over fpng's compression level (defaults to 1 - slow compression).
 - New arg **--sub-font-name**, this allows control of subtitle font names (defaults to Segoe UI).
-- New arg **--subtitle-secondary-color**, this allows control of the secondary subtitle color.
-- New arg **--subtitle-outline-color**, this allows control of the outline subtitle color.
-- New arg **--subtitle-back-color**, this allows control of the back subtitle color.
+- New arg **--sub-secondary-color**, this allows control of the secondary subtitle color.
+- New arg **--sub-outline-color**, this allows control of the outline subtitle color.
+- New arg **--sub-back-color**, this allows control of the back subtitle color.
 - New args **--sub-bold**, **--sub-italic**, **--sub-underline**, **--sub-strikeout** this allows control of several styles (bold defaults to 1).
 
 ### Changed

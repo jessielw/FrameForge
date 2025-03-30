@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New args **--sub-scale-x** and **--sub-scale-y** this allows control of subtitle scaling (defaults to 100).
 - New arg **--sub-spacing**, this allows control of the subtitle spacing (defaults to 0).
 - New arg **--sub-border-style**, this allows control of the subtitle spacing (defaults to 0).
+- New arg **--sub-outline-width**, this allows control of the subtitle outline width (defaults to 1).
+- New arg **--sub-shadow-depth**, this allows control of the subtitle shadow depth (defaults to 0).
 
 ### Changed
 

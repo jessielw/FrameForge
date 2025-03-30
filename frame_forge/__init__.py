@@ -37,7 +37,8 @@ class GenerateImages:
         re_sync: str,
         comparison_count: int,
         subtitle_color: str,
-        release_sub_title: str | None,
+        source_sub_title: str,
+        release_sub_title: str,
     ):
         self.source_file = source_file
         self.source_node = None
@@ -64,6 +65,7 @@ class GenerateImages:
         self.re_sync = re_sync
         self.comparison_count = comparison_count
         self.subtitle_color = subtitle_color
+        self.source_sub_title = source_sub_title
         self.release_sub_title = release_sub_title
 
         self.core = vs.core
@@ -322,11 +324,11 @@ class GenerateImages:
 
     def handle_subtitles(self, selected_sub_style):
         vs_source_info = self.core.sub.Subtitle(
-            clip=self.source_node, text="Source", style=selected_sub_style
+            clip=self.source_node, text=self.source_sub_title, style=selected_sub_style
         )
         vs_encode_info = FrameInfo(
             clip=self.encode_node,
-            title=self.release_sub_title if self.release_sub_title else "",
+            title=self.release_sub_title,
             style=selected_sub_style,
         )
 

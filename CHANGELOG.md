@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--
+- New arg **--source-sub-title**, to define the **Source** image subtitles (defaults to 'Source').
 
 ### Changed
 
--
+- **--release-sub-title** now defaults to 'Encode'.
+- **--release-sub-title** is set to be deprecated, replaced with **--encode-sub-title**. You will get a warning if you use **--release-sub-title** until the next version.
 
 ### Fixed
 

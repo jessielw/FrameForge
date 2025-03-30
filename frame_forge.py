@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from argparse import ArgumentParser
 from frame_forge import GenerateImages
@@ -75,8 +76,17 @@ if __name__ == "__main__":
         help='Hex color code for subtitle color (i.e. --subtitle-color "#fff000")',
     )
     parser.add_argument(
+        "--source-sub-title",
+        type=str,
+        default="Source",
+        help="Source group subtitle name (this will show on the source images)",
+    )
+    parser.add_argument(
+        "--encode-sub-title",
         "--release-sub-title",
         type=str,
+        default="Encode",
+        dest="encode_sub_title",
         help="Release group subtitle name (this will show on the encode images)",
     )
 
@@ -114,6 +124,18 @@ if __name__ == "__main__":
         image_dir = Path(Path(args.encode).parent / f"{Path(args.encode).stem}_images")
     image_dir.mkdir(parents=True, exist_ok=True)
 
+    # deprecations
+    # TODO: remove support for this arg in the future
+    if "--release-sub-title" in sys.argv:
+        print(
+            "WARNING: '--release-sub-title' is deprecated and will be removed in a future version. Use '--encode-sub-title' instead.",
+            file=sys.stderr,
+        )
+
+    # TODO: add support for halo color
+    # TODO: implement this (note that it only works for fpng) https://github.com/jessielw/FrameForge/issues/2
+    # TODO: consider implementing this here https://github.com/jessielw/FrameForge/issues/1
+
     try:
         img_generator = GenerateImages(
             source_file=Path(args.source),
@@ -140,7 +162,8 @@ if __name__ == "__main__":
             if args.comparison_count
             else 20,
             subtitle_color=args.subtitle_color,
-            release_sub_title=args.release_sub_title,
+            source_sub_title=args.source_sub_title,
+            release_sub_title=args.encode_sub_title,
         )
         if img_generator:
             try:

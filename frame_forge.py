@@ -171,6 +171,24 @@ if __name__ == "__main__":
         help="Subtitle shadow depth (defaults to '0')",
     )
     parser.add_argument(
+        "--sub-left-margin",
+        type=int,
+        default=10,
+        help="Subtitle left margin (defaults to '10')",
+    )
+    parser.add_argument(
+        "--sub-right-margin",
+        type=int,
+        default=10,
+        help="Subtitle right margin (defaults to '10')",
+    )
+    parser.add_argument(
+        "--sub-vertical-margin",
+        type=int,
+        default=10,
+        help="Subtitle vertical margin (defaults to '10')",
+    )
+    parser.add_argument(
         "--source-sub-title",
         type=str,
         default="Source",
@@ -271,6 +289,9 @@ if __name__ == "__main__":
             sub_border_style=args.sub_border_style,
             sub_outline_width=args.sub_outline_width,
             sub_shadow_depth=args.sub_shadow_depth,
+            sub_left_margin=args.sub_left_margin,
+            sub_right_margin=args.sub_right_margin,
+            sub_vertical_margin=args.sub_vertical_margin,
             source_sub_title=args.source_sub_title,
             release_sub_title=args.encode_sub_title,
         )

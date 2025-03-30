@@ -52,6 +52,9 @@ class GenerateImages:
         sub_border_style: int,
         sub_outline_width: int,
         sub_shadow_depth: int,
+        sub_left_margin: int,
+        sub_right_margin: int,
+        sub_vertical_margin: int,
         source_sub_title: str,
         release_sub_title: str,
     ):
@@ -95,6 +98,9 @@ class GenerateImages:
         self.sub_border_style = sub_border_style
         self.sub_outline_width = sub_outline_width
         self.sub_shadow_depth = sub_shadow_depth
+        self.sub_left_margin = sub_left_margin
+        self.sub_right_margin = sub_right_margin
+        self.sub_vertical_margin = sub_vertical_margin
         self.source_sub_title = source_sub_title
         self.release_sub_title = release_sub_title
 
@@ -141,7 +147,8 @@ class GenerateImages:
             f"{self.sub_font_name},{self.sub_size},{color},{secondary_color},{outline_color},{back_color},"
             f"{self.sub_bold},{self.sub_italic},{self.sub_underline},{self.sub_strikeout},"
             f"{self.sub_scale_x},{self.sub_scale_y},{self.sub_spacing},0,{self.sub_border_style},"
-            f"{self.sub_outline_width},{self.sub_shadow_depth},{self.sub_alignment},10,10,10,1"
+            f"{self.sub_outline_width},{self.sub_shadow_depth},{self.sub_alignment},{self.sub_left_margin},"
+            f"{self.sub_right_margin},{self.sub_vertical_margin},1"
         )
         sync_sub_base = (
             "Segoe UI,{size},&H31FF31&,&H00000000,&H00000000,&H00000000,"

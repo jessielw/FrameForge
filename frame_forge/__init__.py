@@ -49,6 +49,7 @@ class GenerateImages:
         sub_scale_x: int,
         sub_scale_y: int,
         sub_spacing: int,
+        sub_border_style: int,
         source_sub_title: str,
         release_sub_title: str,
     ):
@@ -89,6 +90,7 @@ class GenerateImages:
         self.sub_scale_x = sub_scale_x
         self.sub_scale_y = sub_scale_y
         self.sub_spacing = sub_spacing
+        self.sub_border_style = sub_border_style
         self.source_sub_title = source_sub_title
         self.release_sub_title = release_sub_title
 
@@ -134,7 +136,8 @@ class GenerateImages:
         selected_sub_style = (
             f"{self.sub_font_name},{self.sub_size},{color},{secondary_color},{outline_color},{back_color},"
             f"{self.sub_bold},{self.sub_italic},{self.sub_underline},{self.sub_strikeout},"
-            f"{self.sub_scale_x},{self.sub_scale_y},{self.sub_spacing},0,1,1,0,{self.sub_alignment},10,10,10,1"
+            f"{self.sub_scale_x},{self.sub_scale_y},{self.sub_spacing},0,{self.sub_border_style},"
+            f"1,0,{self.sub_alignment},10,10,10,1"
         )
         sync_sub_base = (
             "Segoe UI,{size},&H31FF31&,&H00000000,&H00000000,&H00000000,"

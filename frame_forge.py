@@ -152,6 +152,13 @@ if __name__ == "__main__":
         help="Subtitle spacing (defaults to '0')",
     )
     parser.add_argument(
+        "--sub-border-style",
+        type=int,
+        choices=(0, 1, 3),
+        default=0,
+        help="Subtitle border style (0=off, 1=outline, 3=opaque box) [defaults to '0']",
+    )
+    parser.add_argument(
         "--source-sub-title",
         type=str,
         default="Source",
@@ -249,6 +256,7 @@ if __name__ == "__main__":
             sub_scale_x=args.sub_scale_x,
             sub_scale_y=args.sub_scale_y,
             sub_spacing=args.sub_spacing,
+            sub_border_style=args.sub_border_style,
             source_sub_title=args.source_sub_title,
             release_sub_title=args.encode_sub_title,
         )

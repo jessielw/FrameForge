@@ -253,9 +253,6 @@ if __name__ == "__main__":
             file=sys.stderr,
         )
 
-    # TODO: add support for halo color
-    # TODO: consider implementing this here https://github.com/jessielw/FrameForge/issues/1
-
     try:
         img_generator = GenerateImages(
             source_file=Path(args.source),

@@ -121,7 +121,9 @@ class GenerateImages:
         num_source_frames = len(self.source_node)
         num_encode_frames = len(self.encode_node)
 
-        # ASS subtitle styles
+        # ASS docs (useful docs https://fileformats.fandom.com/wiki/SubStation_Alpha and
+        # https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/ass.h)
+        # ASS styles
         # Font Name, Font Size, Primary Color, Secondary Color, Outline Color, Back Color, Bold,
         # Italic, Underline, Strikeout, Scale X, Scale Y, Spacing, Angle, Border Style, Outline Width,
         # Shadow Depth, Alignment, Left Margin, Right Margin, Vertical Margin, Encoding

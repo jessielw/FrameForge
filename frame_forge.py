@@ -95,7 +95,17 @@ if __name__ == "__main__":
     )
     parser.add_argument("--sub-size", type=int, default=20, help="Size of subtitles")
     parser.add_argument(
-        "--sub-alignment", type=int, default=7, help="Alignment of subtitles (.ass)"
+        "--sub-alignment",
+        type=int,
+        default=7,
+        choices=(1, 2, 3, 4, 5, 6, 7, 8, 9),
+        help=(
+            "Alignment of subtitles (Alignment values are based on the numeric "
+            "keypad. 1 - bottom left, 2 - bottom center, 3 - bottom right, 4 - center left, "
+            "5 - center center, 6 - center right, 7 - top left, 8 - top center, "
+            "9 - top right. In addition to determining the position of the subtitle, "
+            "this also determines the alignment of the text itself)"
+        ),
     )
     parser.add_argument(
         "--sub-font-name",

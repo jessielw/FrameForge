@@ -13,7 +13,7 @@ usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--fpng-compress
                   [--adv-resize-top ADV_RESIZE_TOP] [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map]
                   [--re-sync RE_SYNC] [--comparison-count COMPARISON_COUNT] [--sub-color SUB_COLOR]
                   [--sub-secondary-color SUB_SECONDARY_COLOR] [--sub-outline-color SUB_OUTLINE_COLOR]
-                  [--sub-back-color SUB_BACK_COLOR] [--sub-size SUB_SIZE] [--sub-alignment SUB_ALIGNMENT]
+                  [--sub-back-color SUB_BACK_COLOR] [--sub-size SUB_SIZE] [--sub-alignment {1,2,3,4,5,6,7,8,9}]
                   [--sub-font-name SUB_FONT_NAME] [--sub-bold {0,1}] [--sub-italic {0,1}] [--sub-underline {0,1}]
                   [--sub-strikeout {0,1}] [--sub-scale-x SUB_SCALE_X] [--sub-scale-y SUB_SCALE_Y]
                   [--sub-spacing SUB_SPACING] [--sub-border-style {0,1,3}] [--sub-outline-width SUB_OUTLINE_WIDTH]
@@ -67,8 +67,11 @@ options:
   --sub-back-color SUB_BACK_COLOR
                         Hex color code for subtitle back color (i.e. --sub-color "#fff000")
   --sub-size SUB_SIZE   Size of subtitles
-  --sub-alignment SUB_ALIGNMENT
-                        Alignment of subtitles (.ass)
+  --sub-alignment {1,2,3,4,5,6,7,8,9}
+                        Alignment of subtitles (Alignment values are based on the numeric keypad. 1 - bottom left, 2 -
+                        bottom center, 3 - bottom right, 4 - center left, 5 - center center, 6 - center right, 7 - top
+                        left, 8 - top center, 9 - top right. In addition to determining the position of the subtitle, this
+                        also determines the alignment of the text itself)
   --sub-font-name SUB_FONT_NAME
                         Font name for subtitles
   --sub-bold {0,1}      Bold formatting for subtitles (0=off, 1=on)

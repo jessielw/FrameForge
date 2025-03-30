@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New arg **--sub-outline-width**, this allows control of the subtitle outline width (defaults to 1).
 - New arg **--sub-shadow-depth**, this allows control of the subtitle shadow depth (defaults to 0).
 - New args **--sub-left-margin**, **--sub-right-margin**, and **--sub-vertical-margin**, this allows control of several margins (they all default to 10).
+- Improve description for alignment.
 
 ### Changed
 

@@ -78,6 +78,11 @@ if __name__ == "__main__":
         type=str,
         help='Hex color code for subtitle color (i.e. --subtitle-color "#fff000")',
     )
+    parser.add_argument(
+        "--subtitle-secondary-color",
+        type=str,
+        help='Hex color code for subtitle secondary color (i.e. --subtitle-color "#fff000")',
+    )
     parser.add_argument("--sub-size", type=int, default=20, help="Size of subtitles")
     parser.add_argument(
         "--sub-alignment", type=int, default=7, help="Alignment of subtitles (.ass)"
@@ -175,6 +180,7 @@ if __name__ == "__main__":
             sub_size=args.sub_size,
             sub_alignment=args.sub_alignment,
             sub_color=args.subtitle_color,
+            sub_secondary_color=args.subtitle_secondary_color,
             sub_font_name=args.sub_font_name,
             source_sub_title=args.source_sub_title,
             release_sub_title=args.encode_sub_title,

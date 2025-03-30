@@ -107,7 +107,7 @@ class GenerateImages:
         self.core = vs.core
         self.load_plugins()
 
-        self.temp_dir: Path = None
+        self.temp_dir: Path | None = None
 
     def process_images(self) -> Path:
         self.check_index_paths()
@@ -118,6 +118,10 @@ class GenerateImages:
         elif self.indexer == "ffms2":
             self.index_ffms2()
 
+        if not self.source_node or not self.encode_node:
+            raise AttributeError(
+                "Source and/or encode node is not a valid VideoNode (failed to determine len)"
+            )
         num_source_frames = len(self.source_node)
         num_encode_frames = len(self.encode_node)
 
@@ -265,7 +269,7 @@ class GenerateImages:
         ScreenGen(
             vs_source_info,
             frame_numbers=[
-                self.frames[i] for i in range(len(self.frames)) if i % 2 == 0
+                int(self.frames[i]) for i in range(len(self.frames)) if i % 2 == 0
             ],
             fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
@@ -278,7 +282,7 @@ class GenerateImages:
         ScreenGen(
             vs_encode_info,
             frame_numbers=[
-                self.frames[i] for i in range(len(self.frames)) if i % 2 != 0
+                int(self.frames[i]) for i in range(len(self.frames)) if i % 2 != 0
             ],
             fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
@@ -397,6 +401,10 @@ class GenerateImages:
             )
 
     def handle_resize(self):
+        if not self.source_node or not self.encode_node:
+            raise AttributeError(
+                "Source and/or encode node is not a valid VideoNode (failed to determine dimensions)"
+            )
         if (
             self.source_node.width != self.encode_node.width
             and self.source_node.height != self.encode_node.height
@@ -506,13 +514,17 @@ class GenerateImages:
         print("Image move completed", flush=True)
 
     def clean_temp(self, status: bool = True) -> None:
-        if status:
-            print("\nRemoving temp folder")
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-        if status:
-            print("Temp folder removal completed")
+        if self.temp_dir:
+            if status:
+                print("\nRemoving temp folder")
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+            if status:
+                print("Temp folder removal completed")
 
     def get_b_frames(self, num_source_frames):
+        if not self.encode_node:
+            raise AttributeError("Encode node is not a valid VideoNode")
+
         print(
             f"\nGenerating {self.comparison_count} 'B' frames for comparison images",
             flush=True,
@@ -546,6 +558,10 @@ class GenerateImages:
 
     def check_de_interlaced(self, num_source_frames, num_encode_frames):
         print("\nChecking if encode has been de-interlaced", flush=True)
+        if not self.source_node or not self.encode_node:
+            raise AttributeError(
+                "Source and/or encode node is not a valid VideoNode (failed to determine FPS)"
+            )
         try:
             source_fps = float(self.source_node.fps)
             encode_fps = float(self.encode_node.fps)
@@ -607,7 +623,9 @@ class GenerateImages:
                 lwi_cache_path = index_path
                 break
 
-        if not lwi_cache_path and self.source_index_path.exists():
+        if not lwi_cache_path and (
+            self.source_index_path and Path(self.source_index_path).exists()
+        ):
             print("Index found, attempting to use", flush=True)
             lwi_cache_path = self.source_index_path
 
@@ -634,7 +652,7 @@ class GenerateImages:
         print("\nIndexing encode", flush=True)
 
         if self.encode_index_path:
-            cache_path_enc = self.encode_index_path
+            cache_path_enc = Path(self.encode_index_path)
         else:
             cache_path_enc = Path(Path(self.encode_file).with_suffix(".lwi"))
 
@@ -673,7 +691,9 @@ class GenerateImages:
                 ffindex_cache_path = index_path
                 break
 
-        if not ffindex_cache_path and self.source_index_path.exists():
+        if not ffindex_cache_path and (
+            self.source_index_path and Path(self.source_index_path).exists()
+        ):
             print("Index found, attempting to use", flush=True)
             ffindex_cache_path = self.source_index_path
 
@@ -711,7 +731,7 @@ class GenerateImages:
         print("\nIndexing encode", flush=True)
 
         if self.encode_index_path:
-            cache_path_enc = self.encode_index_path
+            cache_path_enc = Path(self.encode_index_path)
         else:
             cache_path_enc = Path(str(self.encode_file) + ".ffindex")
 

@@ -146,6 +146,12 @@ if __name__ == "__main__":
         help="Subtitle Y scale (defaults to '100')",
     )
     parser.add_argument(
+        "--sub-spacing",
+        type=int,
+        default=0,
+        help="Subtitle spacing (defaults to '0')",
+    )
+    parser.add_argument(
         "--source-sub-title",
         type=str,
         default="Source",
@@ -242,6 +248,7 @@ if __name__ == "__main__":
             sub_strikeout=args.sub_strikeout,
             sub_scale_x=args.sub_scale_x,
             sub_scale_y=args.sub_scale_y,
+            sub_spacing=args.sub_spacing,
             source_sub_title=args.source_sub_title,
             release_sub_title=args.encode_sub_title,
         )

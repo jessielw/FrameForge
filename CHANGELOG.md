@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New arg **--sub-back-color**, this allows control of the back subtitle color.
 - New args **--sub-bold**, **--sub-italic**, **--sub-underline**, and **--sub-strikeout** this allows control of several styles (bold defaults to 1).
 - New args **--sub-scale-x** and **--sub-scale-y** this allows control of subtitle scaling (defaults to 100).
+- New arg **--sub-spacing**, this allows control of the subtitle spacing (defaults to 0).
 
 ### Changed
 

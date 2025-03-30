@@ -3,7 +3,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 from frame_forge import GenerateImages
 from frame_forge.exceptions import FrameForgeError
-from frame_forge.utils import exit_application
+from frame_forge.utils import exit_application, restricted_int
 from frame_forge.cli_utils import frame_list
 
 
@@ -133,17 +133,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--sub-scale-x",
-        type=int,
-        choices=range(1, 101),
+        type=restricted_int(1, 101),
         default=100,
-        help="Subtitle X scale (defaults to '100')",
+        help="Subtitle X scale [choices 1 - 100] (defaults to '100')",
     )
     parser.add_argument(
         "--sub-scale-y",
-        type=int,
-        choices=range(1, 101),
+        type=restricted_int(1, 101),
         default=100,
-        help="Subtitle Y scale (defaults to '100')",
+        help="Subtitle Y scale [choices 1 - 100] (defaults to '100')",
     )
     parser.add_argument(
         "--sub-spacing",

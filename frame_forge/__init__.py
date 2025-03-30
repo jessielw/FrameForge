@@ -40,6 +40,7 @@ class GenerateImages:
         sub_color: str,
         sub_secondary_color: str,
         sub_outline_color: str,
+        sub_back_color: str,
         sub_font_name: str,
         source_sub_title: str,
         release_sub_title: str,
@@ -72,6 +73,7 @@ class GenerateImages:
         self.sub_color = sub_color
         self.sub_secondary_color = sub_secondary_color
         self.sub_outline_color = sub_outline_color
+        self.sub_back_color = sub_back_color
         self.sub_font_name = sub_font_name
         self.source_sub_title = source_sub_title
         self.release_sub_title = release_sub_title
@@ -111,8 +113,12 @@ class GenerateImages:
         if self.sub_outline_color:
             outline_color = hex_to_bgr(self.sub_outline_color)
 
+        back_color = "&H00000000"
+        if self.sub_back_color:
+            back_color = hex_to_bgr(self.sub_back_color)
+
         selected_sub_style = (
-            f"{self.sub_font_name},{self.sub_size},{color},{secondary_color},{outline_color},&H00000000,"
+            f"{self.sub_font_name},{self.sub_size},{color},{secondary_color},{outline_color},{back_color},"
             f"1,0,0,0,100,100,0,0,1,1,0,{self.sub_alignment},10,10,10,1"
         )
         sync_sub_base = (

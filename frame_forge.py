@@ -132,6 +132,20 @@ if __name__ == "__main__":
         help="Strikeout formatting for subtitles (0=off, 1=on)",
     )
     parser.add_argument(
+        "--sub-scale-x",
+        type=int,
+        choices=range(1, 101),
+        default=100,
+        help="Subtitle X scale (defaults to '100')",
+    )
+    parser.add_argument(
+        "--sub-scale-y",
+        type=int,
+        choices=range(1, 101),
+        default=100,
+        help="Subtitle Y scale (defaults to '100')",
+    )
+    parser.add_argument(
         "--source-sub-title",
         type=str,
         default="Source",
@@ -226,6 +240,8 @@ if __name__ == "__main__":
             sub_italic=args.sub_italic,
             sub_underline=args.sub_underline,
             sub_strikeout=args.sub_strikeout,
+            sub_scale_x=args.sub_scale_x,
+            sub_scale_y=args.sub_scale_y,
             source_sub_title=args.source_sub_title,
             release_sub_title=args.encode_sub_title,
         )

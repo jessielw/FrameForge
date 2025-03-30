@@ -24,8 +24,6 @@ class GenerateImages:
         img_lib: str,
         source_index_path: None | str,
         encode_index_path: None | str,
-        sub_size: int,
-        sub_alignment: int,
         left_crop: int,
         right_crop: int,
         top_crop: int,
@@ -37,7 +35,10 @@ class GenerateImages:
         tone_map: bool,
         re_sync: str,
         comparison_count: int,
-        subtitle_color: str,
+        sub_size: int,
+        sub_alignment: int,
+        sub_color: str,
+        sub_font_name: str,
         source_sub_title: str,
         release_sub_title: str,
     ):
@@ -53,8 +54,6 @@ class GenerateImages:
         self.img_lib = ScreenGenEncoder(img_lib)
         self.source_index_path = source_index_path
         self.encode_index_path = encode_index_path
-        self.sub_size = sub_size
-        self.sub_alignment = sub_alignment
         self.left_crop = left_crop
         self.right_crop = right_crop
         self.top_crop = top_crop
@@ -66,7 +65,10 @@ class GenerateImages:
         self.tone_map = tone_map
         self.re_sync = re_sync
         self.comparison_count = comparison_count
-        self.subtitle_color = subtitle_color
+        self.sub_size = sub_size
+        self.sub_alignment = sub_alignment
+        self.sub_color = sub_color
+        self.sub_font_name = sub_font_name
         self.source_sub_title = source_sub_title
         self.release_sub_title = release_sub_title
 
@@ -94,11 +96,11 @@ class GenerateImages:
 
         # bgr color
         color = "&H14FF39"
-        if self.subtitle_color:
-            color = hex_to_bgr(self.subtitle_color)
+        if self.sub_color:
+            color = hex_to_bgr(self.sub_color)
 
         selected_sub_style = (
-            f"Segoe UI,{self.sub_size},{color},&H00000000,&H00000000,&H00000000,"
+            f"{self.sub_font_name},{self.sub_size},{color},&H00000000,&H00000000,&H00000000,"
             f"1,0,0,0,100,100,0,0,1,1,0,{self.sub_alignment},10,10,10,1"
         )
         sync_sub_base = (

@@ -21,6 +21,13 @@ if __name__ == "__main__":
     parser.add_argument("--source", type=str, help="Path to source file")
     parser.add_argument("--encode", type=str, help="Path to encode file")
     parser.add_argument(
+        "--fpng-compression",
+        type=int,
+        choices=(0, 1, 2),
+        default=1,
+        help="fpng compression level (0 - fast, 1 - slow [default], 2 - uncompressed)",
+    )
+    parser.add_argument(
         "--frames",
         type=frame_list,
         help="Only use this if you want to specify the "
@@ -133,13 +140,13 @@ if __name__ == "__main__":
         )
 
     # TODO: add support for halo color
-    # TODO: implement this (note that it only works for fpng) https://github.com/jessielw/FrameForge/issues/2
     # TODO: consider implementing this here https://github.com/jessielw/FrameForge/issues/1
 
     try:
         img_generator = GenerateImages(
             source_file=Path(args.source),
             encode_file=Path(args.encode),
+            fpng_compression=args.fpng_compression,
             frames=args.frames,
             image_dir=image_dir,
             indexer=args.indexer,

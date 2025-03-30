@@ -17,6 +17,7 @@ class GenerateImages:
         self,
         source_file: Path,
         encode_file: Path,
+        fpng_compression: int,
         frames: str,
         image_dir: Path,
         indexer: str,
@@ -44,6 +45,7 @@ class GenerateImages:
         self.source_node = None
         self.reference_source_file = None
         self.encode_file = encode_file
+        self.fpng_compression = fpng_compression
         self.frames = frames
         self.encode_node = None
         self.image_dir = image_dir
@@ -173,7 +175,7 @@ class GenerateImages:
             ScreenGen(
                 vs_encode_ref_info,
                 frame_numbers=[ref_frame],
-                fpng_compression=1,
+                fpng_compression=self.fpng_compression,
                 folder=screenshot_sync_dir,
                 suffix="b_encode__%d",
                 callback=self.screen_gen_callback,
@@ -193,7 +195,7 @@ class GenerateImages:
             ScreenGen(
                 vs_sync_info,
                 frame_numbers=[sync_frame],
-                fpng_compression=1,
+                fpng_compression=self.fpng_compression,
                 folder=Path(screenshot_sync_dir),
                 suffix="a_source__%d",
                 callback=self.screen_gen_callback,
@@ -214,7 +216,7 @@ class GenerateImages:
             frame_numbers=[
                 self.frames[i] for i in range(len(self.frames)) if i % 2 == 0
             ],
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
             callback=self.screen_gen_callback,
@@ -227,7 +229,7 @@ class GenerateImages:
             frame_numbers=[
                 self.frames[i] for i in range(len(self.frames)) if i % 2 != 0
             ],
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",
             callback=self.screen_gen_callback,
@@ -266,7 +268,7 @@ class GenerateImages:
         ScreenGen(
             vs_source_info,
             frame_numbers=sync_frames,
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
             callback=self.screen_gen_callback,
@@ -277,7 +279,7 @@ class GenerateImages:
         ScreenGen(
             vs_encode_info,
             frame_numbers=b_frames,
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",
             callback=self.screen_gen_callback,

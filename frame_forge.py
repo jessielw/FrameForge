@@ -249,7 +249,8 @@ if __name__ == "__main__":
     # TODO: remove support for this arg in the future
     if "--release-sub-title" in sys.argv:
         print(
-            "WARNING: '--release-sub-title' is deprecated and will be removed in a future version. Use '--encode-sub-title' instead.",
+            "WARNING: '--release-sub-title' is deprecated and will be removed in a future version. "
+            "Use '--encode-sub-title' instead.",
             file=sys.stderr,
         )
 

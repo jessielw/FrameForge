@@ -1,8 +1,22 @@
-from pathlib import Path
-from subprocess import run, PIPE
 import os
+import re
 import shutil
 import sys
+from pathlib import Path
+from subprocess import run
+
+
+def get_site_packages() -> Path:
+    output = run(
+        ["uv", "pip", "show", "awsmfunc"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    get_location = re.search(r"Location: (.+)\n", output, flags=re.MULTILINE)
+    if not get_location:
+        raise FileNotFoundError("Can not detect site packages")
+    return Path(get_location.group(1))
 
 
 def build_app():
@@ -10,12 +24,13 @@ def build_app():
     project_root = Path(__file__).parent
     os.chdir(project_root)
 
-    # Ensure we're in a virtual env, if we are, install dependencies using Poetry
+    # Ensure we're in a virtual env, if we are, install dependencies
     if sys.prefix == sys.base_prefix:
         raise Exception("You must activate your virtual environment first")
     else:
-        # Use Poetry to install dependencies
-        run(["poetry", "install"])
+        check_packages = run(["uv", "sync", "--inexact"], check=True, text=True)
+        if check_packages.returncode != 0:
+            raise Exception("Failed to sync packages with UV")
 
     # Define the PyInstaller output path
     pyinstaller_folder = project_root / "pyinstaller_build"
@@ -31,31 +46,18 @@ def build_app():
     icon_path = project_root / "images" / "icon.ico"
     additional_hooks_path = Path(Path.cwd() / "hooks")
 
-    # get poetry venv path
-    poetry_venv_path = run(
-        ["cmd", "/c", "poetry", "env", "info", "--path"],
-        stdout=PIPE,
-        stderr=PIPE,
-        text=True,
-        check=True,
-    )
-    if poetry_venv_path.returncode == 0 and poetry_venv_path.stdout:
-        poetry_venv_path = Path(poetry_venv_path.stdout.strip())
-        site_packages = poetry_venv_path / "Lib" / "site-packages"
-
-        # get paths to needed vapoursynth files in poetry venv
-        vapoursynth_64 = site_packages / "vapoursynth64"
-        vapoursynth_64_portable = site_packages / "portable.vs"
-    else:
-        raise FileNotFoundError("Cannot find path to poetry venv")
+    # get paths to needed vapoursynth files in venv
+    site_packages = get_site_packages()
+    vapoursynth_64 = site_packages / "vapoursynth64"
+    vapoursynth_64_portable = site_packages / "portable.vs"
 
     # Change directory so PyInstaller outputs all of its files in its own folder
     os.chdir(pyinstaller_folder)
 
-    # Run PyInstaller command with Poetry's virtual environment
+    # Run PyInstaller command
     build_job = run(
         [
-            "poetry",
+            "uv",
             "run",
             "pyinstaller",
             # "-w",

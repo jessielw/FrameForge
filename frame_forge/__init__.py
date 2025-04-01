@@ -1,15 +1,17 @@
+import asyncio
 import re
 import shutil
+import numpy as np
 import tempfile
-from random import choice
+from random import choice, randint
 from pathlib import Path
+from time import sleep
 from typing import Tuple
-from numpy import linspace
 
 import vapoursynth as vs
 from awsmfunc import ScreenGenEncoder, ScreenGen, FrameInfo, DynamicTonemap
 from frame_forge.exceptions import FrameForgeError
-from frame_forge.utils import get_working_dir, hex_to_bgr
+from frame_forge.utils import get_working_dir, hex_to_bgr, run_async
 
 
 class GenerateImages:
@@ -35,6 +37,8 @@ class GenerateImages:
         tone_map: bool,
         re_sync: str,
         comparison_count: int,
+        start_trim: int,
+        end_trim: int,
         sub_size: int,
         sub_alignment: int,
         sub_color: str,
@@ -81,6 +85,8 @@ class GenerateImages:
         self.tone_map = tone_map
         self.re_sync = re_sync
         self.comparison_count = comparison_count
+        self.start_trim = start_trim
+        self.end_trim = end_trim
         self.sub_size = sub_size
         self.sub_alignment = sub_alignment
         self.sub_color = sub_color
@@ -171,11 +177,17 @@ class GenerateImages:
 
         b_frames = None
         if not self.frames:
-            b_frames = self.get_b_frames(num_source_frames)
+            b_frames = run_async(
+                self.get_b_frames(
+                    num_source_frames=num_source_frames,
+                    start_trim=self.start_trim,
+                    end_trim=self.end_trim,
+                )
+            )
 
         (
             temp_screenshot_comparison_dir,
-            temp_selected_dir,
+            _,
             temp_screenshot_sync_dir,
         ) = self.generate_temp_folders()
 
@@ -497,7 +509,7 @@ class GenerateImages:
         return screenshot_comparison_dir, selected_dir, screenshot_sync_dir
 
     def move_images(self, temp_folder: Path, output_folder: Path) -> None:
-        print("\nMoving generated images")
+        print("\nMoving generated images", flush=True)
 
         for sub_folder in temp_folder.iterdir():
             if sub_folder.is_dir():
@@ -506,10 +518,35 @@ class GenerateImages:
 
                 for item in sub_folder.iterdir():
                     target_item = target_sub_folder / item.name
-                    if item.is_dir():
-                        shutil.move(item, target_item)
-                    else:
-                        shutil.move(item, target_sub_folder)
+
+                    # retry for 50 seconds (10 attempts, 5s each)
+                    attempts = 10
+                    while attempts > 0:
+                        try:
+                            if item.is_dir():
+                                shutil.move(item, target_item)
+                            else:
+                                shutil.move(item, target_sub_folder)
+                            # exit loop if successful
+                            break
+                        except PermissionError:
+                            attempts -= 1
+                            if attempts == 0:
+                                print(
+                                    f"Failed to move {item} due to permission issues after multiple attempts",
+                                    flush=True,
+                                )
+                                raise PermissionError(
+                                    f"Failed to move {item} due to permission issues"
+                                ) from None
+                            else:
+                                print(
+                                    f"Permission denied for {item}, retrying in 5 seconds "
+                                    f"(close any open files/folders/terminals related to the "
+                                    f"image output path '{target_sub_folder}')...",
+                                    flush=True,
+                                )
+                                sleep(5)
 
         print("Image move completed", flush=True)
 
@@ -521,40 +558,107 @@ class GenerateImages:
             if status:
                 print("Temp folder removal completed")
 
-    def get_b_frames(self, num_source_frames):
+    async def get_b_frames(
+        self, num_source_frames: int, start_trim: int, end_trim: int
+    ) -> list[int]:
         if not self.encode_node:
             raise AttributeError("Encode node is not a valid VideoNode")
 
+        if not (0 <= start_trim <= 100) or not (0 <= end_trim <= 100):
+            raise ValueError("Trim percentages must be between 0 and 100 (inclusive).")
+
+        front_trim_frames = (num_source_frames * start_trim) // 100
+        end_trim_frames = (num_source_frames * end_trim) // 100
+        available_frames = num_source_frames - (front_trim_frames + end_trim_frames)
+
+        if available_frames <= 0:
+            raise ValueError("Trimmed range leaves no frames available.")
+
         print(
-            f"\nGenerating {self.comparison_count} 'B' frames for comparison images",
+            f"\nGenerating {self.comparison_count} 'B' frames for comparison images"
+            f" (Trimmed Range: {front_trim_frames} - {num_source_frames - end_trim_frames})",
             flush=True,
         )
 
-        b_frames = list(
-            linspace(
-                int(num_source_frames * 0.15),
-                int(num_source_frames * 0.75),
-                int(self.comparison_count),
-            ).astype(int)
+        interval = max(1, available_frames // self.comparison_count)
+        random_offset = randint(0, interval)
+
+        b_frames = [
+            front_trim_frames + random_offset + (i * interval)
+            for i in range(self.comparison_count)
+        ]
+
+        pict_types = {"B", b"B"}
+
+        # limit to 5 concurrent frame fetches
+        semaphore = asyncio.Semaphore(5)
+
+        async def check_frame(frame: int, max_attempts: int = 5):
+            """Fetch frame asynchronously while respecting the semaphore limit."""
+            async with semaphore:
+                attempts = 0
+                while frame < num_source_frames and attempts < max_attempts:
+                    future = self.encode_node.get_frame_async(frame)  # pyright: ignore [reportOptionalMemberAccess]
+                    video_frame = await asyncio.wrap_future(future)
+
+                    if video_frame.props["_PictType"] in pict_types:
+                        return frame
+                    frame += 1
+                    attempts += 1
+                return None
+
+        # sample a few frames across the video to check if B-frames exist
+        sampled_frames = np.linspace(
+            0, num_source_frames - 1, min(10, num_source_frames), dtype=int
         )
 
-        try:
-            pict_types = ("B", b"B")
-            for i, frame in enumerate(b_frames):
-                while (
-                    self.encode_node.get_frame(frame).props["_PictType"]
-                    not in pict_types
-                ):
-                    frame += 1
-                b_frames[i] = frame
-        except ValueError:
+        # fetch sample frames in batches
+        async def fetch_sampled_frames():
+            results = []
+            # process in chunks of 5
+            for i in range(0, len(sampled_frames), 5):
+                batch = sampled_frames[i : i + 5]
+                sample_futures = [
+                    asyncio.wrap_future(self.encode_node.get_frame_async(int(frame)))  # pyright: ignore [reportOptionalMemberAccess]
+                    for frame in batch
+                ]
+                results.extend(await asyncio.gather(*sample_futures))
+            return results
+
+        sampled_video_frames = await fetch_sampled_frames()
+        sampled_pict_types = {
+            frame.props["_PictType"] for frame in sampled_video_frames
+        }
+
+        # if no B-frames exist, fall back early
+        if not pict_types.intersection(sampled_pict_types):
+            print(
+                "No 'B' frames detected in sample check, falling back early.",
+                flush=True,
+            )
+            pict_types = {"I", b"I", "P", b"P", "B", b"B"}
+
+        # process frame checks in batches to avoid overloading VapourSynth
+        async def process_frames_in_batches(frames, batch_size=5):
+            results = []
+            for i in range(0, len(frames), batch_size):
+                batch = frames[i : i + batch_size]
+                batch_results = await asyncio.gather(
+                    *[check_frame(int(frame)) for frame in batch]
+                )
+                results.extend(batch_results)
+            return results
+
+        valid_b_frames = await process_frames_in_batches(b_frames)
+        valid_b_frames = [frame for frame in valid_b_frames if frame is not None]
+
+        if not valid_b_frames:
             raise FrameForgeError(
                 "Error! Your encode file is likely an incomplete or corrupted encode"
             )
 
-        print(f"Finished generating {self.comparison_count} 'B' frames", flush=True)
-
-        return b_frames
+        print(f"Finished generating {len(valid_b_frames)} 'B' frames", flush=True)
+        return valid_b_frames
 
     def check_de_interlaced(self, num_source_frames, num_encode_frames):
         print("\nChecking if encode has been de-interlaced", flush=True)

@@ -74,6 +74,18 @@ if __name__ == "__main__":
         "--comparison-count", type=int, help="Amount of comparisons to generate"
     )
     parser.add_argument(
+        "--start-trim",
+        type=restricted_int(0, 100),
+        default=12,
+        help="Percentage to trim from start of media [choices 0 - 100] (defaults to 12%)",
+    )
+    parser.add_argument(
+        "--end-trim",
+        type=restricted_int(0, 100),
+        default=12,
+        help="Percentage to trim from end of media [choices 0 - 100] (defaults to 12%)",
+    )
+    parser.add_argument(
         "--sub-color",
         type=str,
         help='Hex color code for subtitle color (i.e. --sub-color "#fff000")',
@@ -143,13 +155,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--sub-scale-x",
-        type=restricted_int(1, 101),
+        type=restricted_int(1, 100),
         default=100,
         help="Subtitle X scale [choices 1 - 100] (defaults to '100')",
     )
     parser.add_argument(
         "--sub-scale-y",
-        type=restricted_int(1, 101),
+        type=restricted_int(1, 100),
         default=100,
         help="Subtitle Y scale [choices 1 - 100] (defaults to '100')",
     )
@@ -278,6 +290,8 @@ if __name__ == "__main__":
             comparison_count=int(args.comparison_count)
             if args.comparison_count
             else 20,
+            start_trim=int(args.start_trim),
+            end_trim=int(args.end_trim),
             sub_size=args.sub_size,
             sub_alignment=args.sub_alignment,
             sub_color=args.sub_color,
@@ -312,6 +326,9 @@ if __name__ == "__main__":
             except Exception as except_error:
                 img_generator.clean_temp(False)
                 exit_application(f"Unhandled Exception: {except_error}", 1)
+            except KeyboardInterrupt:
+                img_generator.clean_temp(False)
+                exit_application("KeyboardInterrupt, exiting...", 1)
             finally:
                 img_generator.clean_temp(False)
     except Exception as init_error:

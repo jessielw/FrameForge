@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from argparse import ArgumentTypeError
 from pathlib import Path
@@ -58,3 +59,15 @@ def restricted_int(min_value: int, max_value: int):
         raise ArgumentTypeError(f"Value must be between {min_value} and {max_value}")
 
     return validate
+
+
+def run_async(coro):
+    """Runs an async coroutine safely, using the existing event loop if available."""
+    # try to use existing event loop
+    try:
+        loop = asyncio.get_running_loop()
+        future = asyncio.ensure_future(coro)
+        return loop.run_until_complete(future)
+    # no event loop is running, use `asyncio.run()`
+    except RuntimeError:
+        return asyncio.run(coro)

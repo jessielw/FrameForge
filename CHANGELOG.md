@@ -22,17 +22,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New arg **--sub-outline-width**, this allows control of the subtitle outline width (defaults to 1).
 - New arg **--sub-shadow-depth**, this allows control of the subtitle shadow depth (defaults to 0).
 - New args **--sub-left-margin**, **--sub-right-margin**, and **--sub-vertical-margin**, this allows control of several margins (they all default to 10).
-- Improve description for alignment.
+- New arg **--start-trim**, this allows control of the starting percentage to generate images from (defaults to 12%).
+- New arg **--end-trim**, this allows control of the ending percentage to generate images from (defaults to 12%).
+- Moving images now warns/gives the user a chance to close folders/files/terminals related to the path of the image output via a message/timer in an attempt to avoid failure.
+- Now catches **KeyboardInterrupt** and properly exits/cleans up.
 
 ### Changed
 
 - **--release-sub-title** now defaults to 'Encode'.
 - **--release-sub-title** is set to be deprecated, replaced with **--encode-sub-title**. You will get a warning if you use **--release-sub-title** until the next version.
+- Improve description for alignment.
+- Massively improved **b-frame** detection logic for the **encode** images. It now can handle _smaller_ files by utilizing a **fallback** mode that will find **I**, **P**, and **B** frames if there isn't enough **b-frames** in a media file.
+- **B-frame** detection now **randomly** does a small offset to generate **unique** images on the same film when ran multiple times.
+- **B-frame** detection is now **async** detecting things in batches of 5, this can massively speed up the detection around **40x** depending on drive speed.
 
 ### Fixed
 
 - Potential issue with an unbound error.
-- Some minor code issues and type hinting. 
+- Some minor code issues and type hinting.
 
 ### Removed
 

@@ -7,19 +7,20 @@ A CLI to generate comparison image sets utilizing the power of VapourSynth
 ```
 usage: FrameForge [-h] [-v] [--source SOURCE] [--encode ENCODE] [--fpng-compression {0,1,2}] [--frames FRAMES]
                   [--image-dir IMAGE_DIR] [--indexer {lsmash,ffms2}] [--img-lib {imwri,fpng}]
-                  [--source-index-path SOURCE_INDEX_PATH] [--encode-index-path ENCODE_INDEX_PATH] [--left-crop LEFT_CROP]
-                  [--right-crop RIGHT_CROP] [--top-crop TOP_CROP] [--bottom-crop BOTTOM_CROP]
+                  [--source-index-path SOURCE_INDEX_PATH] [--encode-index-path ENCODE_INDEX_PATH]
+                  [--left-crop LEFT_CROP] [--right-crop RIGHT_CROP] [--top-crop TOP_CROP] [--bottom-crop BOTTOM_CROP]
                   [--adv-resize-left ADV_RESIZE_LEFT] [--adv-resize-right ADV_RESIZE_RIGHT]
                   [--adv-resize-top ADV_RESIZE_TOP] [--adv-resize-bottom ADV_RESIZE_BOTTOM] [--tone-map]
-                  [--re-sync RE_SYNC] [--comparison-count COMPARISON_COUNT] [--sub-color SUB_COLOR]
-                  [--sub-secondary-color SUB_SECONDARY_COLOR] [--sub-outline-color SUB_OUTLINE_COLOR]
-                  [--sub-back-color SUB_BACK_COLOR] [--sub-size SUB_SIZE] [--sub-alignment {1,2,3,4,5,6,7,8,9}]
-                  [--sub-font-name SUB_FONT_NAME] [--sub-bold {0,1}] [--sub-italic {0,1}] [--sub-underline {0,1}]
-                  [--sub-strikeout {0,1}] [--sub-scale-x SUB_SCALE_X] [--sub-scale-y SUB_SCALE_Y]
-                  [--sub-spacing SUB_SPACING] [--sub-border-style {0,1,3}] [--sub-outline-width SUB_OUTLINE_WIDTH]
-                  [--sub-shadow-depth SUB_SHADOW_DEPTH] [--sub-left-margin SUB_LEFT_MARGIN]
-                  [--sub-right-margin SUB_RIGHT_MARGIN] [--sub-vertical-margin SUB_VERTICAL_MARGIN]
-                  [--source-sub-title SOURCE_SUB_TITLE] [--encode-sub-title ENCODE_SUB_TITLE]
+                  [--re-sync RE_SYNC] [--comparison-count COMPARISON_COUNT] [--start-trim START_TRIM]
+                  [--end-trim END_TRIM] [--sub-color SUB_COLOR] [--sub-secondary-color SUB_SECONDARY_COLOR]
+                  [--sub-outline-color SUB_OUTLINE_COLOR] [--sub-back-color SUB_BACK_COLOR] [--sub-size SUB_SIZE]
+                  [--sub-alignment {1,2,3,4,5,6,7,8,9}] [--sub-font-name SUB_FONT_NAME] [--sub-bold {0,1}]
+                  [--sub-italic {0,1}] [--sub-underline {0,1}] [--sub-strikeout {0,1}] [--sub-scale-x SUB_SCALE_X]
+                  [--sub-scale-y SUB_SCALE_Y] [--sub-spacing SUB_SPACING] [--sub-border-style {0,1,3}]
+                  [--sub-outline-width SUB_OUTLINE_WIDTH] [--sub-shadow-depth SUB_SHADOW_DEPTH]
+                  [--sub-left-margin SUB_LEFT_MARGIN] [--sub-right-margin SUB_RIGHT_MARGIN]
+                  [--sub-vertical-margin SUB_VERTICAL_MARGIN] [--source-sub-title SOURCE_SUB_TITLE]
+                  [--encode-sub-title ENCODE_SUB_TITLE]
 
 options:
   -h, --help            show this help message and exit
@@ -58,6 +59,9 @@ options:
   --re-sync RE_SYNC     Sync offset for image generation in frames (i.e. --re-sync=-3)
   --comparison-count COMPARISON_COUNT
                         Amount of comparisons to generate
+  --start-trim START_TRIM
+                        Percentage to trim from start of media [choices 0 - 100] (defaults to 12%)
+  --end-trim END_TRIM   Percentage to trim from end of media [choices 0 - 100] (defaults to 12%)
   --sub-color SUB_COLOR
                         Hex color code for subtitle color (i.e. --sub-color "#fff000")
   --sub-secondary-color SUB_SECONDARY_COLOR
@@ -70,8 +74,8 @@ options:
   --sub-alignment {1,2,3,4,5,6,7,8,9}
                         Alignment of subtitles (Alignment values are based on the numeric keypad. 1 - bottom left, 2 -
                         bottom center, 3 - bottom right, 4 - center left, 5 - center center, 6 - center right, 7 - top
-                        left, 8 - top center, 9 - top right. In addition to determining the position of the subtitle, this
-                        also determines the alignment of the text itself)
+                        left, 8 - top center, 9 - top right. In addition to determining the position of the subtitle,
+                        this also determines the alignment of the text itself)
   --sub-font-name SUB_FONT_NAME
                         Font name for subtitles
   --sub-bold {0,1}      Bold formatting for subtitles (0=off, 1=on)

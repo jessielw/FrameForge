@@ -77,13 +77,13 @@ if __name__ == "__main__":
         "--start-trim",
         type=restricted_int(0, 100),
         default=12,
-        help="Percentage to trim from start of media [choices 0 - 100] (defaults to 12%)",
+        help="Percentage to trim from start of media [choices 0 - 100] (defaults to 12%%)",
     )
     parser.add_argument(
         "--end-trim",
         type=restricted_int(0, 100),
         default=12,
-        help="Percentage to trim from end of media [choices 0 - 100] (defaults to 12%)",
+        help="Percentage to trim from end of media [choices 0 - 100] (defaults to 12%%)",
     )
     parser.add_argument(
         "--sub-color",

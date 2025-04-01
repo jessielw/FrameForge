@@ -10,3 +10,4 @@ pyinstaller_build/
 scrap_files/
 .vscode/
 custom-pyinstaller/
+scraps/

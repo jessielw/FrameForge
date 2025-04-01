@@ -1,15 +1,17 @@
+import asyncio
 import re
 import shutil
+import numpy as np
 import tempfile
-from random import choice
+from random import choice, randint
 from pathlib import Path
+from time import sleep
 from typing import Tuple
-from numpy import linspace
 
 import vapoursynth as vs
 from awsmfunc import ScreenGenEncoder, ScreenGen, FrameInfo, DynamicTonemap
 from frame_forge.exceptions import FrameForgeError
-from frame_forge.utils import get_working_dir, hex_to_bgr
+from frame_forge.utils import get_working_dir, hex_to_bgr, run_async
 
 
 class GenerateImages:
@@ -17,14 +19,13 @@ class GenerateImages:
         self,
         source_file: Path,
         encode_file: Path,
+        fpng_compression: int,
         frames: str,
         image_dir: Path,
         indexer: str,
         img_lib: str,
         source_index_path: None | str,
         encode_index_path: None | str,
-        sub_size: int,
-        sub_alignment: int,
         left_crop: int,
         right_crop: int,
         top_crop: int,
@@ -36,13 +37,36 @@ class GenerateImages:
         tone_map: bool,
         re_sync: str,
         comparison_count: int,
-        subtitle_color: str,
-        release_sub_title: str | None,
+        start_trim: int,
+        end_trim: int,
+        sub_size: int,
+        sub_alignment: int,
+        sub_color: str,
+        sub_secondary_color: str,
+        sub_outline_color: str,
+        sub_back_color: str,
+        sub_font_name: str,
+        sub_bold: int,
+        sub_italic: int,
+        sub_underline: int,
+        sub_strikeout: int,
+        sub_scale_x: int,
+        sub_scale_y: int,
+        sub_spacing: int,
+        sub_border_style: int,
+        sub_outline_width: int,
+        sub_shadow_depth: int,
+        sub_left_margin: int,
+        sub_right_margin: int,
+        sub_vertical_margin: int,
+        source_sub_title: str,
+        release_sub_title: str,
     ):
         self.source_file = source_file
         self.source_node = None
         self.reference_source_file = None
         self.encode_file = encode_file
+        self.fpng_compression = fpng_compression
         self.frames = frames
         self.encode_node = None
         self.image_dir = image_dir
@@ -50,8 +74,6 @@ class GenerateImages:
         self.img_lib = ScreenGenEncoder(img_lib)
         self.source_index_path = source_index_path
         self.encode_index_path = encode_index_path
-        self.sub_size = sub_size
-        self.sub_alignment = sub_alignment
         self.left_crop = left_crop
         self.right_crop = right_crop
         self.top_crop = top_crop
@@ -63,13 +85,35 @@ class GenerateImages:
         self.tone_map = tone_map
         self.re_sync = re_sync
         self.comparison_count = comparison_count
-        self.subtitle_color = subtitle_color
+        self.start_trim = start_trim
+        self.end_trim = end_trim
+        self.sub_size = sub_size
+        self.sub_alignment = sub_alignment
+        self.sub_color = sub_color
+        self.sub_secondary_color = sub_secondary_color
+        self.sub_outline_color = sub_outline_color
+        self.sub_back_color = sub_back_color
+        self.sub_font_name = sub_font_name
+        self.sub_bold = sub_bold
+        self.sub_italic = sub_italic
+        self.sub_underline = sub_underline
+        self.sub_strikeout = sub_strikeout
+        self.sub_scale_x = sub_scale_x
+        self.sub_scale_y = sub_scale_y
+        self.sub_spacing = sub_spacing
+        self.sub_border_style = sub_border_style
+        self.sub_outline_width = sub_outline_width
+        self.sub_shadow_depth = sub_shadow_depth
+        self.sub_left_margin = sub_left_margin
+        self.sub_right_margin = sub_right_margin
+        self.sub_vertical_margin = sub_vertical_margin
+        self.source_sub_title = source_sub_title
         self.release_sub_title = release_sub_title
 
         self.core = vs.core
         self.load_plugins()
 
-        self.temp_dir: Path = None
+        self.temp_dir: Path | None = None
 
     def process_images(self) -> Path:
         self.check_index_paths()
@@ -80,22 +124,43 @@ class GenerateImages:
         elif self.indexer == "ffms2":
             self.index_ffms2()
 
+        if not self.source_node or not self.encode_node:
+            raise AttributeError(
+                "Source and/or encode node is not a valid VideoNode (failed to determine len)"
+            )
         num_source_frames = len(self.source_node)
         num_encode_frames = len(self.encode_node)
 
-        # ASS subtitle styles
+        # ASS docs (useful docs https://fileformats.fandom.com/wiki/SubStation_Alpha and
+        # https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/ass.h)
+        # ASS styles
         # Font Name, Font Size, Primary Color, Secondary Color, Outline Color, Back Color, Bold,
         # Italic, Underline, Strikeout, Scale X, Scale Y, Spacing, Angle, Border Style, Outline Width,
         # Shadow Depth, Alignment, Left Margin, Right Margin, Vertical Margin, Encoding
 
         # bgr color
         color = "&H14FF39"
-        if self.subtitle_color:
-            color = hex_to_bgr(self.subtitle_color)
+        if self.sub_color:
+            color = hex_to_bgr(self.sub_color)
+
+        secondary_color = "&H00000000"
+        if self.sub_secondary_color:
+            secondary_color = hex_to_bgr(self.sub_secondary_color)
+
+        outline_color = "&H00000000"
+        if self.sub_outline_color:
+            outline_color = hex_to_bgr(self.sub_outline_color)
+
+        back_color = "&H00000000"
+        if self.sub_back_color:
+            back_color = hex_to_bgr(self.sub_back_color)
 
         selected_sub_style = (
-            f"Segoe UI,{self.sub_size},{color},&H00000000,&H00000000,&H00000000,"
-            f"1,0,0,0,100,100,0,0,1,1,0,{self.sub_alignment},10,10,10,1"
+            f"{self.sub_font_name},{self.sub_size},{color},{secondary_color},{outline_color},{back_color},"
+            f"{self.sub_bold},{self.sub_italic},{self.sub_underline},{self.sub_strikeout},"
+            f"{self.sub_scale_x},{self.sub_scale_y},{self.sub_spacing},0,{self.sub_border_style},"
+            f"{self.sub_outline_width},{self.sub_shadow_depth},{self.sub_alignment},{self.sub_left_margin},"
+            f"{self.sub_right_margin},{self.sub_vertical_margin},1"
         )
         sync_sub_base = (
             "Segoe UI,{size},&H31FF31&,&H00000000,&H00000000,&H00000000,"
@@ -112,11 +177,17 @@ class GenerateImages:
 
         b_frames = None
         if not self.frames:
-            b_frames = self.get_b_frames(num_source_frames)
+            b_frames = run_async(
+                self.get_b_frames(
+                    num_source_frames=num_source_frames,
+                    start_trim=self.start_trim,
+                    end_trim=self.end_trim,
+                )
+            )
 
         (
             temp_screenshot_comparison_dir,
-            temp_selected_dir,
+            _,
             temp_screenshot_sync_dir,
         ) = self.generate_temp_folders()
 
@@ -171,7 +242,7 @@ class GenerateImages:
             ScreenGen(
                 vs_encode_ref_info,
                 frame_numbers=[ref_frame],
-                fpng_compression=1,
+                fpng_compression=self.fpng_compression,
                 folder=screenshot_sync_dir,
                 suffix="b_encode__%d",
                 callback=self.screen_gen_callback,
@@ -191,7 +262,7 @@ class GenerateImages:
             ScreenGen(
                 vs_sync_info,
                 frame_numbers=[sync_frame],
-                fpng_compression=1,
+                fpng_compression=self.fpng_compression,
                 folder=Path(screenshot_sync_dir),
                 suffix="a_source__%d",
                 callback=self.screen_gen_callback,
@@ -210,9 +281,9 @@ class GenerateImages:
         ScreenGen(
             vs_source_info,
             frame_numbers=[
-                self.frames[i] for i in range(len(self.frames)) if i % 2 == 0
+                int(self.frames[i]) for i in range(len(self.frames)) if i % 2 == 0
             ],
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
             callback=self.screen_gen_callback,
@@ -223,9 +294,9 @@ class GenerateImages:
         ScreenGen(
             vs_encode_info,
             frame_numbers=[
-                self.frames[i] for i in range(len(self.frames)) if i % 2 != 0
+                int(self.frames[i]) for i in range(len(self.frames)) if i % 2 != 0
             ],
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",
             callback=self.screen_gen_callback,
@@ -264,7 +335,7 @@ class GenerateImages:
         ScreenGen(
             vs_source_info,
             frame_numbers=sync_frames,
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="a_source__%d",
             callback=self.screen_gen_callback,
@@ -275,7 +346,7 @@ class GenerateImages:
         ScreenGen(
             vs_encode_info,
             frame_numbers=b_frames,
-            fpng_compression=1,
+            fpng_compression=self.fpng_compression,
             folder=screenshot_comparison_dir,
             suffix="b_encode__%d",
             callback=self.screen_gen_callback,
@@ -322,11 +393,11 @@ class GenerateImages:
 
     def handle_subtitles(self, selected_sub_style):
         vs_source_info = self.core.sub.Subtitle(
-            clip=self.source_node, text="Source", style=selected_sub_style
+            clip=self.source_node, text=self.source_sub_title, style=selected_sub_style
         )
         vs_encode_info = FrameInfo(
             clip=self.encode_node,
-            title=self.release_sub_title if self.release_sub_title else "",
+            title=self.release_sub_title,
             style=selected_sub_style,
         )
 
@@ -342,6 +413,10 @@ class GenerateImages:
             )
 
     def handle_resize(self):
+        if not self.source_node or not self.encode_node:
+            raise AttributeError(
+                "Source and/or encode node is not a valid VideoNode (failed to determine dimensions)"
+            )
         if (
             self.source_node.width != self.encode_node.width
             and self.source_node.height != self.encode_node.height
@@ -434,7 +509,7 @@ class GenerateImages:
         return screenshot_comparison_dir, selected_dir, screenshot_sync_dir
 
     def move_images(self, temp_folder: Path, output_folder: Path) -> None:
-        print("\nMoving generated images")
+        print("\nMoving generated images", flush=True)
 
         for sub_folder in temp_folder.iterdir():
             if sub_folder.is_dir():
@@ -443,54 +518,154 @@ class GenerateImages:
 
                 for item in sub_folder.iterdir():
                     target_item = target_sub_folder / item.name
-                    if item.is_dir():
-                        shutil.move(item, target_item)
-                    else:
-                        shutil.move(item, target_sub_folder)
+
+                    # retry for 50 seconds (10 attempts, 5s each)
+                    attempts = 10
+                    while attempts > 0:
+                        try:
+                            if item.is_dir():
+                                shutil.move(item, target_item)
+                            else:
+                                shutil.move(item, target_sub_folder)
+                            # exit loop if successful
+                            break
+                        except PermissionError:
+                            attempts -= 1
+                            if attempts == 0:
+                                print(
+                                    f"Failed to move {item} due to permission issues after multiple attempts",
+                                    flush=True,
+                                )
+                                raise PermissionError(
+                                    f"Failed to move {item} due to permission issues"
+                                ) from None
+                            else:
+                                print(
+                                    f"Permission denied for {item}, retrying in 5 seconds "
+                                    f"(close any open files/folders/terminals related to the "
+                                    f"image output path '{target_sub_folder}')...",
+                                    flush=True,
+                                )
+                                sleep(5)
 
         print("Image move completed", flush=True)
 
     def clean_temp(self, status: bool = True) -> None:
-        if status:
-            print("\nRemoving temp folder")
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-        if status:
-            print("Temp folder removal completed")
+        if self.temp_dir:
+            if status:
+                print("\nRemoving temp folder")
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+            if status:
+                print("Temp folder removal completed")
 
-    def get_b_frames(self, num_source_frames):
+    async def get_b_frames(
+        self, num_source_frames: int, start_trim: int, end_trim: int
+    ) -> list[int]:
+        if not self.encode_node:
+            raise AttributeError("Encode node is not a valid VideoNode")
+
+        if not (0 <= start_trim <= 100) or not (0 <= end_trim <= 100):
+            raise ValueError("Trim percentages must be between 0 and 100 (inclusive).")
+
+        front_trim_frames = (num_source_frames * start_trim) // 100
+        end_trim_frames = (num_source_frames * end_trim) // 100
+        available_frames = num_source_frames - (front_trim_frames + end_trim_frames)
+
+        if available_frames <= 0:
+            raise ValueError("Trimmed range leaves no frames available.")
+
         print(
-            f"\nGenerating {self.comparison_count} 'B' frames for comparison images",
+            f"\nGenerating {self.comparison_count} 'B' frames for comparison images"
+            f" (Trimmed Range: {front_trim_frames} - {num_source_frames - end_trim_frames})",
             flush=True,
         )
 
-        b_frames = list(
-            linspace(
-                int(num_source_frames * 0.15),
-                int(num_source_frames * 0.75),
-                int(self.comparison_count),
-            ).astype(int)
+        interval = max(1, available_frames // self.comparison_count)
+        random_offset = randint(0, interval)
+
+        b_frames = [
+            front_trim_frames + random_offset + (i * interval)
+            for i in range(self.comparison_count)
+        ]
+
+        pict_types = {"B", b"B"}
+
+        # limit to 5 concurrent frame fetches
+        semaphore = asyncio.Semaphore(5)
+
+        async def check_frame(frame: int, max_attempts: int = 5):
+            """Fetch frame asynchronously while respecting the semaphore limit."""
+            async with semaphore:
+                attempts = 0
+                while frame < num_source_frames and attempts < max_attempts:
+                    future = self.encode_node.get_frame_async(frame)  # pyright: ignore [reportOptionalMemberAccess]
+                    video_frame = await asyncio.wrap_future(future)
+
+                    if video_frame.props["_PictType"] in pict_types:
+                        return frame
+                    frame += 1
+                    attempts += 1
+                return None
+
+        # sample a few frames across the video to check if B-frames exist
+        sampled_frames = np.linspace(
+            0, num_source_frames - 1, min(10, num_source_frames), dtype=int
         )
 
-        try:
-            pict_types = ("B", b"B")
-            for i, frame in enumerate(b_frames):
-                while (
-                    self.encode_node.get_frame(frame).props["_PictType"]
-                    not in pict_types
-                ):
-                    frame += 1
-                b_frames[i] = frame
-        except ValueError:
+        # fetch sample frames in batches
+        async def fetch_sampled_frames():
+            results = []
+            # process in chunks of 5
+            for i in range(0, len(sampled_frames), 5):
+                batch = sampled_frames[i : i + 5]
+                sample_futures = [
+                    asyncio.wrap_future(self.encode_node.get_frame_async(int(frame)))  # pyright: ignore [reportOptionalMemberAccess]
+                    for frame in batch
+                ]
+                results.extend(await asyncio.gather(*sample_futures))
+            return results
+
+        sampled_video_frames = await fetch_sampled_frames()
+        sampled_pict_types = {
+            frame.props["_PictType"] for frame in sampled_video_frames
+        }
+
+        # if no B-frames exist, fall back early
+        if not pict_types.intersection(sampled_pict_types):
+            print(
+                "No 'B' frames detected in sample check, falling back early.",
+                flush=True,
+            )
+            pict_types = {"I", b"I", "P", b"P", "B", b"B"}
+
+        # process frame checks in batches to avoid overloading VapourSynth
+        async def process_frames_in_batches(frames, batch_size=5):
+            results = []
+            for i in range(0, len(frames), batch_size):
+                batch = frames[i : i + batch_size]
+                batch_results = await asyncio.gather(
+                    *[check_frame(int(frame)) for frame in batch]
+                )
+                results.extend(batch_results)
+            return results
+
+        valid_b_frames = await process_frames_in_batches(b_frames)
+        valid_b_frames = [frame for frame in valid_b_frames if frame is not None]
+
+        if not valid_b_frames:
             raise FrameForgeError(
                 "Error! Your encode file is likely an incomplete or corrupted encode"
             )
 
-        print(f"Finished generating {self.comparison_count} 'B' frames", flush=True)
-
-        return b_frames
+        print(f"Finished generating {len(valid_b_frames)} 'B' frames", flush=True)
+        return valid_b_frames
 
     def check_de_interlaced(self, num_source_frames, num_encode_frames):
         print("\nChecking if encode has been de-interlaced", flush=True)
+        if not self.source_node or not self.encode_node:
+            raise AttributeError(
+                "Source and/or encode node is not a valid VideoNode (failed to determine FPS)"
+            )
         try:
             source_fps = float(self.source_node.fps)
             encode_fps = float(self.encode_node.fps)
@@ -552,7 +727,9 @@ class GenerateImages:
                 lwi_cache_path = index_path
                 break
 
-        if not lwi_cache_path and self.source_index_path.exists():
+        if not lwi_cache_path and (
+            self.source_index_path and Path(self.source_index_path).exists()
+        ):
             print("Index found, attempting to use", flush=True)
             lwi_cache_path = self.source_index_path
 
@@ -579,7 +756,7 @@ class GenerateImages:
         print("\nIndexing encode", flush=True)
 
         if self.encode_index_path:
-            cache_path_enc = self.encode_index_path
+            cache_path_enc = Path(self.encode_index_path)
         else:
             cache_path_enc = Path(Path(self.encode_file).with_suffix(".lwi"))
 
@@ -618,7 +795,9 @@ class GenerateImages:
                 ffindex_cache_path = index_path
                 break
 
-        if not ffindex_cache_path and self.source_index_path.exists():
+        if not ffindex_cache_path and (
+            self.source_index_path and Path(self.source_index_path).exists()
+        ):
             print("Index found, attempting to use", flush=True)
             ffindex_cache_path = self.source_index_path
 
@@ -656,7 +835,7 @@ class GenerateImages:
         print("\nIndexing encode", flush=True)
 
         if self.encode_index_path:
-            cache_path_enc = self.encode_index_path
+            cache_path_enc = Path(self.encode_index_path)
         else:
             cache_path_enc = Path(str(self.encode_file) + ".ffindex")
 
